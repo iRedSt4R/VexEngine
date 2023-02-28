@@ -1,0 +1,27 @@
+LINK_DIRECTORIES(${ENGINE_OUTPUT_DIR})
+INCLUDE_DIRECTORIES(${TP_D3DX12_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${TP_DXC_INCLUDE_DIR})
+
+# Files for static library build
+file(GLOB_RECURSE SourceFiless
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
+)
+
+#define output (static lib)
+add_library(${RENDER_LIBRARY_NAME} STATIC ${SourceFiless})
+
+# C++/Compiler setting
+set_property(TARGET ${RENDER_LIBRARY_NAME} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${RENDER_LIBRARY_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SourceFiless})
+
+set_target_properties(
+    ${RENDER_LIBRARY_NAME}
+    PROPERTIES OUTPUT_NAME 
+    "VexRenderer"
+)
