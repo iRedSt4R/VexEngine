@@ -7,7 +7,7 @@ DX12Resource::DX12Resource()
 
 DX12Resource::~DX12Resource()
 {
-
+	delete m_resource;
 }
 
 //void DX12Resource::AddResource(D3D12MA::Allocation* allocation)
@@ -46,15 +46,27 @@ void DX12Resource::AddDSV(DX12DescriptorMemory dsvHandle)
 
 bool DX12Resource::ChangeState(D3D12_RESOURCE_STATES newState, ID3D12GraphicsCommandList* cmdList)
 {
-	if (m_CurrentResourceState == newState)
+	if (m_currentResourceState == newState)
 		return false;
 
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_resource, m_CurrentResourceState, newState);
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_resource, m_currentResourceState, newState);
 	cmdList->ResourceBarrier(1, &barrier);
+	m_currentResourceState = newState;
 
-	m_CurrentResourceState = newState;
 	return true;
 }
+
+//bool DX12Resource::ChangeState(D3D12_RESOURCE_STATES newState)
+//{
+	//if (m_CurrentResourceState == newState)
+		//return false;
+
+	//CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_resource, m_CurrentResourceState, newState);
+	//cmdList->ResourceBarrier(1, &barrier);
+
+	//m_CurrentResourceState = newState;
+	//return true;
+//}
 
 DX12ResourceBase::DX12ResourceBase()
 {

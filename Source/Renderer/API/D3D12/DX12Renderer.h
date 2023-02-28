@@ -37,12 +37,25 @@ public:
 		m_renderContexts[contextID]->m_indexBuffer = indexedVertexBuffer->GetIndexBufferView();
 	};
 	__forceinline void SetInputLayout(uint8_t contextID, D3D12_INPUT_LAYOUT_DESC inputLayout) { m_renderContexts[contextID]->m_psoDesc.InputLayout = inputLayout; }
-	__forceinline void SetVertexShader(uint8_t contextID, D3D12_SHADER_BYTECODE vertexShader) { m_renderContexts[contextID]->m_psoDesc.VS = vertexShader; };
-	__forceinline void SetPixelShader(uint8_t contextID, D3D12_SHADER_BYTECODE pixelShader) { m_renderContexts[contextID]->m_psoDesc.PS = pixelShader; };
+	__forceinline void SetVertexShader(uint8_t contextID, D3D12_SHADER_BYTECODE vertexShader) { m_renderContexts[contextID]->m_psoDesc.VS = vertexShader; }
+	__forceinline void SetPixelShader(uint8_t contextID, D3D12_SHADER_BYTECODE pixelShader) { m_renderContexts[contextID]->m_psoDesc.PS = pixelShader; }
+	__forceinline void DrawIndexed(uint8_t contextID, uint32_t indicesCount) { m_renderContexts[contextID]->DrawIndexed(indicesCount); }
 
-	__forceinline void SendToMainQueue(uint8_t contextID) { m_renderContexts[contextID]->SendToQueue(m_device->GetMainCommandQueue()); }
+	__forceinline void SendToMainQueue(uint8_t contextID) 
+	{
+		m_renderContexts[contextID]->SendToQueue(m_device->GetMainCommandQueue()); 
+		m_bLastExecutedContext = contextID;
+	}
+
+	// Creator funtions:
+	DX12IndexedVertexBuffer* CreateIndexedVertexBuffer(int vertexBufferByteSize, int vertexBufferStride, int indexCount, void* vbData, void* ibData);
+
+
+	//__forceinline void ResolveContextBarrier(uint8_t contextID, )
 
 	__forceinline ID3D12Device* GetD3D12Device() { return m_device->GetDevice(); }
+	__forceinline uint8_t GetLastExecContextID() { return m_bLastExecutedContext; }
+
 private:
 	inline static DX12Renderer* s_renderer = nullptr;
 
@@ -57,5 +70,6 @@ private:
 	uint64_t fenceValue = 0;
 
 	std::vector<DX12RenderContext*> m_renderContexts = {};
+	uint8_t m_bLastExecutedContext = 0;
 
 };

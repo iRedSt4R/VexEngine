@@ -39,6 +39,11 @@ void DX12RenderContext::SendToQueue(ID3D12CommandQueue* cmdQueue)
 	cmdQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
+void DX12RenderContext::DrawIndexed(uint32_t indicesCount)
+{
+	m_cmdList->DrawIndexedInstanced(indicesCount, 1, 0, 0, 0);
+}
+
 void DX12RenderContext::ResetCmdList()
 {
 	auto commandAllocator = m_cmdAllocator[m_currentBackBuffer];

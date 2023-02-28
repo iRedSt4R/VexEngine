@@ -5,9 +5,8 @@ DX12ShaderLibrary::DX12ShaderLibrary()
 	m_shaderCompiler = new DX12ShaderCompiler();
 
 	// Precompile shaders at the beginning
-	//std::filesystem::path = 
-	CompileAndAddVertexShader(L"Shaders/2D/2d_vs_color.hlsl");
-	CompileAndAddPixelShader(L"Shaders/2D/2d_ps_color.hlsl");
+	CompileAndAddVertexShader(L"../../Source/Renderer/Shaders/2D/2d_vs_color.hlsl");
+	CompileAndAddPixelShader(L"../../Source/Renderer/Shaders/2D/2d_ps_color.hlsl");
 
 }
 

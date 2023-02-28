@@ -27,8 +27,10 @@ public:
 	void AddDSV(DX12DescriptorMemory dsvHandle);
 
 	// return true if barrier has to be executed, return false if resource was already in desired state (SINGLE THREADED)
+	//void AssureContextState(uint8_t contextID, D3D12_RESOURCE_STATES desiredState, ID3D12GraphicsCommandList* cmdList);
+	//bool ChangeContextState(uint8_t contextID, D3D12_RESOURCE_STATES newState, ID3D12GraphicsCommandList* cmdList);
 	bool ChangeState(D3D12_RESOURCE_STATES newState, ID3D12GraphicsCommandList* cmdList);
-	void SetCurrentState(D3D12_RESOURCE_STATES newState) { m_CurrentResourceState = newState; }
+	void SetCurrentState(D3D12_RESOURCE_STATES newState) { m_currentResourceState = newState; }
 
 	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetSRV() { return m_SRV.m_GpuDescriptorMemory; }
 	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetUAV() { return m_UAV.m_GpuDescriptorMemory; }
@@ -56,7 +58,7 @@ private:
 	DX12DescriptorMemory m_DSV = {};
 
 	ID3D12Resource* m_resource = nullptr;
-	D3D12_RESOURCE_STATES m_CurrentResourceState = D3D12_RESOURCE_STATE_COMMON;
+	D3D12_RESOURCE_STATES m_currentResourceState = D3D12_RESOURCE_STATE_COMMON;
 };
 
 class DX12ResourceBase

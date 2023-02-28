@@ -18,6 +18,7 @@ public:
 	void SetPSO(ID3D12PipelineState* pipelineState);
 	void ResetCmdList();
 	void SendToQueue(ID3D12CommandQueue* cmdQueue);
+	void DrawIndexed(uint32_t indicesCount);
 	//void SetPSO(ID3D12CommandList* cmdList);
 	//void SetVertexBuffer(D3D12_VERTEX_BUFFER_VIEW vertexBufferView);
 	//void SetIndexBuffer(D3D12_VERTEX_BUFFER_VIEW vertexBufferView);

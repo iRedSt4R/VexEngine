@@ -100,3 +100,10 @@ void DX12Renderer::EndDraw(uint8_t contextID)
 {
 
 }
+
+DX12IndexedVertexBuffer* DX12Renderer::CreateIndexedVertexBuffer(int vertexBufferByteSize, int vertexBufferStride, int indexCount, void* vbData, void* ibData)
+{
+	DX12IndexedVertexBuffer* retBuffer = new DX12IndexedVertexBuffer(m_device->GetDevice());
+	retBuffer->Create(m_renderContexts[0]->m_cmdList, vertexBufferByteSize, vertexBufferStride, indexCount, vbData, ibData);
+	return retBuffer;
+}
