@@ -20,25 +20,25 @@ void DX12Resource::AddResource(ID3D12Resource* resource)
 	m_resource = resource;
 }
 
-void DX12Resource::AddSRV(DX12DescriptorMemory srvHandle)
+void DX12Resource::AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle)
 {
 	m_bHaveSRV = true;
 	m_SRV = srvHandle;
 }
 
-void DX12Resource::AddUAV(DX12DescriptorMemory uavHandle)
+void DX12Resource::AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle)
 {
 	m_bHaveUAV = true;
 	m_UAV = uavHandle;
 }
 
-void DX12Resource::AddRTV(DX12DescriptorMemory rtvHandle)
+void DX12Resource::AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle)
 {
 	m_bHaveRTV = true;
 	m_RTV = rtvHandle;
 }
 
-void DX12Resource::AddDSV(DX12DescriptorMemory dsvHandle)
+void DX12Resource::AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle)
 {
 	m_bHaveDSV = true;
 	m_DSV = dsvHandle;

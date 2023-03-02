@@ -136,6 +136,7 @@ void DX12SwapChain::ClearCurrentBackBuffer(ID3D12GraphicsCommandList* cmdList)
 
 	FLOAT clearColor[] = { 0.0f, 0.1f, 0.5f, 1.0f };
 	cmdList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+	cmdList->ClearDepthStencilView(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
 void DX12SwapChain::ResizeSwapChain(int width, int height)

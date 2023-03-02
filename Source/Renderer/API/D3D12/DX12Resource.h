@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../Common/VexRenderCommon.h"
-#include "Allocator/DX12DescriptorHeap.h"
 #include "Allocator/D3D12MemAlloc.h"
 
 enum class EResourceViewType
@@ -21,10 +20,10 @@ public:
 
 	//void AddResource(D3D12MA::Allocation* allocation);
 	void AddResource(ID3D12Resource* resource);
-	void AddSRV(DX12DescriptorMemory srvHandle);
-	void AddUAV(DX12DescriptorMemory uavHandle);
-	void AddRTV(DX12DescriptorMemory rtvHandle);
-	void AddDSV(DX12DescriptorMemory dsvHandle);
+	void AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle);
+	void AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle);
+	void AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle);
+	void AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle);
 
 	// return true if barrier has to be executed, return false if resource was already in desired state (SINGLE THREADED)
 	//void AssureContextState(uint8_t contextID, D3D12_RESOURCE_STATES desiredState, ID3D12GraphicsCommandList* cmdList);
@@ -32,15 +31,15 @@ public:
 	bool ChangeState(D3D12_RESOURCE_STATES newState, ID3D12GraphicsCommandList* cmdList);
 	void SetCurrentState(D3D12_RESOURCE_STATES newState) { m_currentResourceState = newState; }
 
-	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetSRV() { return m_SRV.m_GpuDescriptorMemory; }
-	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetUAV() { return m_UAV.m_GpuDescriptorMemory; }
-	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetRTV() { return m_RTV.m_GpuDescriptorMemory; }
-	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetDSV() { return m_DSV.m_GpuDescriptorMemory; }
+	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetSRV() { return m_SRV; }
+	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetUAV() { return m_UAV; }
+	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetRTV() { return m_RTV; }
+	__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetDSV() { return m_DSV; }
 
-	__forceinline uint32_t GetSRVIndex() { return m_SRV.m_descriptorIndex; }
-	__forceinline uint32_t GetUAVIndex() { return m_UAV.m_descriptorIndex; }
-	__forceinline uint32_t GetRTVIndex() { return m_RTV.m_descriptorIndex; }
-	__forceinline uint32_t GetDSVIndex() { return m_DSV.m_descriptorIndex; }
+	//__forceinline uint32_t GetSRVIndex() { return m_SRV; }
+	//__forceinline uint32_t GetUAVIndex() { return m_UAV; }
+	//__forceinline uint32_t GetRTVIndex() { return m_RTV; }
+	//__forceinline uint32_t GetDSVIndex() { return m_DSV; }
 
 	//__forceinline ID3D12Resource* GetResource() { return m_Allocation->GetResource(); }
 	//__forceinline D3D12MA::Allocation* GetAllocation() { return m_Allocation; }
@@ -52,10 +51,10 @@ private:
 	bool m_bHaveRTV = false;
 	bool m_bHaveDSV = false;
 
-	DX12DescriptorMemory m_SRV = {};
-	DX12DescriptorMemory m_UAV = {};
-	DX12DescriptorMemory m_RTV = {};
-	DX12DescriptorMemory m_DSV = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE m_SRV = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE m_UAV = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE m_RTV = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE m_DSV = {};
 
 	ID3D12Resource* m_resource = nullptr;
 	D3D12_RESOURCE_STATES m_currentResourceState = D3D12_RESOURCE_STATE_COMMON;

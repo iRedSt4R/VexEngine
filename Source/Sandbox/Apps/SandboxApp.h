@@ -1,5 +1,7 @@
 #include <Core/ApplicationBase.h>
 #include <API/D3D12/DX12Renderer.h>
+#include <API/Camera/FPSCamera.h>
+#include <API/Textures/2DTexture.h>
 
 class SandboxApp : public IApplication
 {
@@ -23,7 +25,14 @@ private:
 
 	//Test triangle
 	DX12IndexedVertexBuffer* m_vertexBuffer;
-	VertexP3C4 m_triangleVertices[3] = {};
+	VertexP3T2 m_triangleVertices[3] = {};
 	uint32_t m_triangleIndices[3] = {0};
 
+	//window data:
+	uint32_t m_height = 0;
+	uint32_t m_width = 0;;
+
+	FPSCamera* m_camera = nullptr;
+	Texture2D* m_texture = nullptr;
+	Mesh* m_mesh = nullptr;
 };

@@ -38,8 +38,8 @@ public:
 	__forceinline void SetAppRunningState(bool runningState) { m_Running = runningState; }
 
 	__forceinline void SetMouseDelta(int x, int y) { m_MouseDeltaX = x; m_MouseDeltaY = y; }
-	__forceinline int GetMouseDeltaX() { return m_MouseDeltaX; }
-	__forceinline int GetMouseDeltaY() { return m_MouseDeltaY; }
+	__forceinline int* GetMouseDeltaX() { return &m_MouseDeltaX; }
+	__forceinline int* GetMouseDeltaY() { return &m_MouseDeltaY; }
 
 	__forceinline int GetWindowHeight() { return m_Height; }
 	__forceinline int GetWindowWidth() { return m_Width; }

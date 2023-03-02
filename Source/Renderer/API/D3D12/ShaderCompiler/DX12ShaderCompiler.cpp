@@ -22,7 +22,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompileVertexShader(std::filesystem::p
 
 	// Compile shader
 	std::vector<LPCWSTR> arguments;
-	arguments.push_back(L"-no-warnings");
+	//arguments.push_back(L"-no-warnings");
 
 	IDxcOperationResult* result;
 	m_Compiler->Compile(
@@ -69,7 +69,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompilePixelShader(std::filesystem::pa
 
 	// Compiler defines
 	std::vector<LPCWSTR> arguments;
-	arguments.push_back(L"-no-warnings");
+	//arguments.push_back(L"-no-warnings");
 
 	// Compile shader
 	IDxcOperationResult* result;

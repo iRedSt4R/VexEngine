@@ -1,4 +1,5 @@
 #include "DX12Renderer.h"
+#include "Allocator\DX12DescriptorHeap.h"
 
 DX12Renderer::DX12Renderer()
 {
@@ -15,6 +16,7 @@ void DX12Renderer::Create(int16_t surfaceWidth, int16_t surfaceHeight, uint8_t b
 	// device
 	m_device = new DX12Device();
 	m_device->Create();
+
 
 	// swampchain
 	m_swapChain = new DX12SwapChain();
@@ -39,6 +41,8 @@ void DX12Renderer::Create(int16_t surfaceWidth, int16_t surfaceHeight, uint8_t b
 	m_scissors.top = 0;
 	m_scissors.right = m_swapChain->GetBackBufferWidth();
 	m_scissors.bottom = m_swapChain->GetBackBufferHeight();
+
+	DX12ResoruceAllocator::Get()->Init(m_device->GetDevice(), m_renderContexts[0]->m_cmdList);
 }
 
 void DX12Renderer::BeginFrame()
@@ -62,6 +66,7 @@ void DX12Renderer::BeginFrame()
 	// set fullscreen viewport and scissors
 	m_renderContexts[0]->m_cmdList->RSSetViewports(1, &m_viewport);
 	m_renderContexts[0]->m_cmdList->RSSetScissorRects(1, &m_scissors);
+	DX12ResoruceAllocator::Get()->BindDescHeap(m_renderContexts[0]->m_cmdList);
 }
 
 void DX12Renderer::EndFrame()

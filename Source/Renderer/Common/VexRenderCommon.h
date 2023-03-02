@@ -1,5 +1,7 @@
 #pragma once
 
+#define NOMINMAX 
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -81,4 +83,16 @@ struct VertexP3C4 {
 
 struct VertexP3 {
 	XMFLOAT3 pos;
+};
+
+//Vertex with position(3 floats) and texcoord(2 floats)
+struct VertexP3T2 {
+	VertexP3T2() {};
+	VertexP3T2(XMFLOAT3 position, XMFLOAT2 coord) {
+		pos = position;
+		texCoord = coord;
+	}
+
+	XMFLOAT3 pos;
+	XMFLOAT2 texCoord;
 };

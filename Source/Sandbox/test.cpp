@@ -5,7 +5,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "dxcompiler.lib")
+//#pragma comment(lib, "dxcompiler.lib")
 
 //DX12RenderContext* renderCtx = nullptr;
 static SandboxApp* m_app;
@@ -21,7 +21,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	auto curPath = std::filesystem::current_path();
 
 	m_app = new SandboxApp();
-	m_app->Create(hInstance, 600, 900);
+	m_app->Create(hInstance, 1080, 1920);
 
 	//renderCtx = new DX12RenderContext();
 	//renderCtx->Create();

@@ -1,6 +1,8 @@
 LINK_DIRECTORIES(${ENGINE_OUTPUT_DIR})
 INCLUDE_DIRECTORIES(${TP_D3DX12_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${TP_DXC_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${TP_DIRECTXTEX_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${TP_ASSIMP_INCLUDE_DIR})
 
 # Files for static library build
 file(GLOB_RECURSE SourceFiless
@@ -13,6 +15,8 @@ file(GLOB_RECURSE SourceFiless
 
 #define output (static lib)
 add_library(${RENDER_LIBRARY_NAME} STATIC ${SourceFiless})
+target_link_libraries(${RENDER_LIBRARY_NAME} DirectXTex.lib)
+target_link_libraries(${RENDER_LIBRARY_NAME} assimp-vc142-mt.lib)
 
 # C++/Compiler setting
 set_property(TARGET ${RENDER_LIBRARY_NAME} PROPERTY CXX_STANDARD 20)

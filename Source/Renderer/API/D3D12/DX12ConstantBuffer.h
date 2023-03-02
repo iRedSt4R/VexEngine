@@ -20,6 +20,15 @@ struct CBModelViewProjection
 	XMFLOAT4X4  projection;
 };
 
+struct CameraCB
+{
+	XMFLOAT4X4 viewMatrix;
+	XMFLOAT4X4 projectionMatrix;
+	XMFLOAT4X4 invViewProjMatrix;
+	XMFLOAT4 worldCameraPosition;
+	XMFLOAT3X4 pad2;
+};
+
 struct CBSceneModel
 {
 	XMFLOAT4X4 modelMatrix;
@@ -30,7 +39,7 @@ class ConstantBuffer
 {
 public:
 	// Creates constant buffer with already allocated descriptor heap for it
-	ConstantBuffer(ID3D12Device5* device)
+	ConstantBuffer(ID3D12Device* device)
 	{
 		m_currentCBIndex = 0;
 		ZeroMemory(&m_CBData, sizeof(CBStructType));

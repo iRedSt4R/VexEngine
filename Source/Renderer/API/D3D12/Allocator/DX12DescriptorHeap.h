@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../Common/VexRenderCommon.h"
+#include "../DX12Resource.h"
 
 struct DX12DescriptorMemory
 {
@@ -40,7 +41,13 @@ public:
 	DX12ResoruceAllocator();
 	~DX12ResoruceAllocator();
 
-	__forceinline void Init(ID3D12Device* device) { m_device = device; }
+	__forceinline void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) 
+	{ 
+		m_device = device;
+
+		m_descHeap = new DX12DescriptorHeap(device, cmdList);
+		m_descHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 256, true);
+	}
 
 	static DX12ResoruceAllocator* Get()
 	{
@@ -51,12 +58,20 @@ public:
 		return s_instance;
 	}
 
+	void BindDescHeap(ID3D12GraphicsCommandList* cmdList)
+	{
+		ID3D12DescriptorHeap* ppHeaps[] = { m_descHeap->GetDescriptorHeap() };
+		cmdList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+	}
 	ID3D12Resource* AllocateConstantBuffer(uint32_t CBSize);
+	DX12Resource* AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath);
 
 private:
 	inline static DX12ResoruceAllocator* s_instance = nullptr;
 
 	ID3D12Device* m_device = nullptr;
+	DX12DescriptorHeap* m_descHeap = nullptr; // desc heap for all shader visible CBVs/SRVs/UAVs
 
 	uint32_t m_constantBufferNumber = 0;
+	uint32_t m_srvNumber = 0;
 };
