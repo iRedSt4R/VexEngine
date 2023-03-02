@@ -29,12 +29,22 @@ public:
 		cmdList->IASetIndexBuffer(&m_IndexBufferView);
 	}
 
+	__forceinline int GetVertexBufferByteSize() { return m_vertexBufferByteSize; }
+	__forceinline int GetVertexBufferByteStride() { return m_vertexBufferByteStride; }
+	__forceinline int GetIndexCount() { return m_indexCount; }
+	__forceinline int GetVertexCount() { return m_vertexBufferByteSize / m_vertexBufferByteStride; }
+
 private:
 	ID3D12Device* m_Device = nullptr;
 	ID3D12Resource* m_VertexBuffer = nullptr;
 	ID3D12Resource* m_IndexBuffer = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView {};
 	D3D12_INDEX_BUFFER_VIEW m_IndexBufferView {};
+
+	// vertex Data:
+	int m_vertexBufferByteSize = 0;
+	int m_vertexBufferByteStride = 0;
+	int m_indexCount = 0;
 
 	// Used to create accellaration structure
 	//D3D12_RAYTRACING_GEOMETRY_DESC m_RTVertexBuffer;

@@ -36,5 +36,27 @@ private:
 
 class DX12ResoruceAllocator
 {
+public:
+	DX12ResoruceAllocator();
+	~DX12ResoruceAllocator();
 
+	__forceinline void Init(ID3D12Device* device) { m_device = device; }
+
+	static DX12ResoruceAllocator* Get()
+	{
+		if (s_instance == nullptr)
+		{
+			s_instance = new DX12ResoruceAllocator();
+		}
+		return s_instance;
+	}
+
+	ID3D12Resource* AllocateConstantBuffer(uint32_t CBSize);
+
+private:
+	inline static DX12ResoruceAllocator* s_instance = nullptr;
+
+	ID3D12Device* m_device = nullptr;
+
+	uint32_t m_constantBufferNumber = 0;
 };

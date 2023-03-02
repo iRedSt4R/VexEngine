@@ -56,7 +56,8 @@ void DX12Renderer::BeginFrame()
 
 	// set render target
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_swapChain->GetBackBufferDescriptorHandle(), m_swapChain->GetCurrentBackBufferIndex(), m_device->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-	m_renderContexts[0]->m_cmdList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
+	auto depthView = m_swapChain->GetDepthStencilView();
+	m_renderContexts[0]->m_cmdList->OMSetRenderTargets(1, &rtv, FALSE, &depthView);
 
 	// set fullscreen viewport and scissors
 	m_renderContexts[0]->m_cmdList->RSSetViewports(1, &m_viewport);

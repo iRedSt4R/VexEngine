@@ -22,6 +22,11 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 
 	m_vertexBuffer = m_renderer->CreateIndexedVertexBuffer(sizeof(m_triangleVertices), sizeof(VertexP3C4), 3, &m_triangleVertices[0], &m_triangleIndices[0]);
 
+	RenderPass2D* twoDPass = new RenderPass2D();
+	twoDPass->Create(m_renderer->GetD3D12Device());
+	twoDPass->AddVertexBuffer(m_vertexBuffer);
+	m_renderPasses.push_back(twoDPass);
+
 	// From this call the m_WinApp will control the application flow from windows callbacks
 	m_winApp->AppLoop();
 }
@@ -33,8 +38,12 @@ void SandboxApp::Begin()
 
 void SandboxApp::Update()
 {
-	m_renderer->SetIndexedVertexBuffer(0, m_vertexBuffer);
-	m_renderer->DrawIndexed(0, 3);
+	for (auto& renderPass : m_renderPasses)
+	{
+		renderPass->BeginPass(m_renderer->GetContextCmdList(0));
+		renderPass->RunPass(m_renderer->GetContextCmdList(0));
+		renderPass->EndPass(m_renderer->GetContextCmdList(0));
+	}
 }
 
 void SandboxApp::End()

@@ -19,6 +19,8 @@ private:
 	Win64App* m_winApp = nullptr;
 	DX12Renderer* m_renderer = nullptr;
 
+	std::vector<IRenderPass*> m_renderPasses = {};
+
 	//Test triangle
 	DX12IndexedVertexBuffer* m_vertexBuffer;
 	VertexP3C4 m_triangleVertices[3] = {};

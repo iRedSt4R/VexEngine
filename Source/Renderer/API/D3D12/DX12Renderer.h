@@ -5,6 +5,8 @@
 #include "DX12Swapchain.h"
 #include "DX12IndexedVertexBuffer.h"
 #include "ShaderCompiler\DX12ShaderLibrary.h"
+#include "../RenderPass/RenderPasses.h"
+
 
 class DX12Renderer
 {
@@ -25,6 +27,8 @@ public:
 	// Called once per frame for all contexts
 	void BeginFrame();
 	void EndFrame();
+
+	//void AddRenderPass(IRenderPass* renderPass) { m_renderPasses.push_back(renderPass); }
 
 	// Called on specific context to clear and reinit context data (usually between render passes)
 	void PreDraw(uint8_t contextID);
@@ -54,6 +58,7 @@ public:
 	//__forceinline void ResolveContextBarrier(uint8_t contextID, )
 
 	__forceinline ID3D12Device* GetD3D12Device() { return m_device->GetDevice(); }
+	__forceinline ID3D12GraphicsCommandList* GetContextCmdList(uint8_t contextID) { return m_renderContexts[contextID]->m_cmdList; }
 	__forceinline uint8_t GetLastExecContextID() { return m_bLastExecutedContext; }
 
 private:
@@ -71,5 +76,7 @@ private:
 
 	std::vector<DX12RenderContext*> m_renderContexts = {};
 	uint8_t m_bLastExecutedContext = 0;
+
+	//std::vector<IRenderPass*> m_renderPasses;
 
 };

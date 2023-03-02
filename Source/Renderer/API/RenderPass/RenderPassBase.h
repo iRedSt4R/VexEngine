@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
+#include "../../Common/VexRenderCommon.h"
 //#include "../../Common/EngineCommon.h"
-#include "../D3D12/DX12IndexedVertexBuffer.h"
 
 using namespace DirectX;
 
@@ -30,7 +30,7 @@ public:
 	//__forceinline void AddGeometryPrimitive(IPrimitiveGeometry* primitiveGeometry) { m_PrimitiveGeometryList.push_back(primitiveGeometry); };
 
 protected:
-	std::vector<DX12IndexedVertexBuffer*> m_vertexBuffers;
+	//std::vector<DX12IndexedVertexBuffer*> m_vertexBuffers;
 
 	std::string m_PassName;
 	ID3D12Device* m_device;

@@ -35,15 +35,23 @@ public:
 		return barrier;
 	}
 
+	__forceinline ID3D12Resource* GetDepthStencilResource() { return m_depthStencilResource; }
+	__forceinline D3D12_CPU_DESCRIPTOR_HANDLE GetDepthStencilView() { return m_dsvHeap->GetCPUDescriptorHandleForHeapStart(); }
 	__forceinline uint16_t GetBackBufferWidth() { return m_BackBufferWidth; }
 	__forceinline uint16_t GetBackBufferHeight() { return m_BackBufferHeight; }
 
 private:
 	ID3D12Device* m_Device = nullptr;
 	IDXGISwapChain4* m_SwapChain = nullptr;
+
+	// color buffers
 	ID3D12Resource** m_RTResources = { nullptr };
 	ID3D12DescriptorHeap* m_RTVDescriptorHeap = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_RTVHeapStartHandle = {};
+
+	// depth buffer
+	ID3D12Resource* m_depthStencilResource = nullptr;
+	ID3D12DescriptorHeap* m_dsvHeap = nullptr;
 
 	uint8_t m_BufferCount = 2;
 	uint8_t m_CurrentBackBufferIndex = 0;

@@ -66,7 +66,7 @@ void DX12SwapChain::Create(ID3D12Device* device, ID3D12CommandQueue* cmdQueue, u
 
 	m_RTResources = new ID3D12Resource* [bufferCount];
 
-	// Create RTV for every backbuffer
+	// Create color RTV for every backbuffer
 	for (int i = 0; i < m_BufferCount; ++i)
 	{
 		ID3D12Resource* backBuffer;
@@ -81,6 +81,38 @@ void DX12SwapChain::Create(ID3D12Device* device, ID3D12CommandQueue* cmdQueue, u
 
 		rtvHandle.Offset(rtvDescriptorSize);
 	}
+
+	// Create dsv for swapchain
+	D3D12_DESCRIPTOR_HEAP_DESC depthDescHeapDesc = {};
+	depthDescHeapDesc.NumDescriptors = 1;
+	depthDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	depthDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	m_Device->CreateDescriptorHeap(&depthDescHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+
+	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	auto textDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+	m_Device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&textDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthOptimizedClearValue,
+		IID_PPV_ARGS(&m_depthStencilResource)
+	);
+	m_dsvHeap->SetName(L"Depth/Stencil Resource Heap");
+
+	m_Device->CreateDepthStencilView(m_depthStencilResource, &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	m_CurrentBackBufferIndex = m_SwapChain->GetCurrentBackBufferIndex();
 }
