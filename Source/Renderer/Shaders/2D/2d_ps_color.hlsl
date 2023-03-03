@@ -16,8 +16,10 @@ cbuffer CameraCB : register(b0)
 
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
-    float3 texColor = TexAlbedo.Sample(BasicSampler, input.texCoord);
+    float4 texColor = TexAlbedo.Sample(BasicSampler, input.texCoord);
 
+    if(texColor.a < 0.8f)
+        discard;
     //return float4(float3(0.7f, 0.2f, 0.4f), 1.f);
-    return float4(texColor, 1.f);
+    return float4(texColor.xyz, 1.f);
 }

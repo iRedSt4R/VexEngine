@@ -10,6 +10,18 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+
+// memory layout : EngineMeshHeader | vertexBufferData | indexBufferData | ddsTextureData
+#pragma pack(push, 1)
+struct EngineMeshHeader
+{
+	uint8_t textureContentType = 0; // describe if and how many dds textures it contains
+	uint32_t vertexByteSize = 0;
+	uint32_t indexByteSize = 0;
+	uint32_t DDSByteSize = 0;
+};
+#pragma pack(pop)
+
 class SimpleMesh
 {
 public:
@@ -25,6 +37,8 @@ public:
 
 	void LoadMesh(const aiScene* scene, int meshIndex, std::string meshFolder);
 	void DrawMesh();
+	void Serialize(std::filesystem::path pathToSerialize);
+	void Deserialize(std::filesystem::path blobPath);
 
 private:
 	float* m_Vertices;
@@ -41,6 +55,9 @@ private:
 
 	Texture2D* m_AlbedoSRV;
 	ConstantBuffer<CBSceneModel>* m_modelCB = nullptr;
+
+	// header used for serialization;
+	EngineMeshHeader m_meshHeader;
 	//ShaderResource* m_MetalnessSRV;
 };
 

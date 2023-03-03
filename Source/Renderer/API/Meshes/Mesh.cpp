@@ -70,6 +70,24 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 	}
 
 	m_IndexedVertexBuffer->Create(m_CmdList, m_VertexCount * 4 * VERTEX_ATTRIBUTE_COUNT, VERTEX_ATTRIBUTE_COUNT * 4, m_IndexCount, m_Vertices, m_Indicies);
+
+	m_meshHeader.textureContentType = 0;
+	m_meshHeader.vertexByteSize = aMesh->mNumVertices * VERTEX_ATTRIBUTE_COUNT * sizeof(float);
+	m_meshHeader.indexByteSize = aMesh->mNumFaces * 3 * sizeof(uint32_t);
+	m_meshHeader.DDSByteSize = 0;
+
+	Serialize(std::string("TEST") + std::to_string(meshIndex) + ".vexmesh");
+
+}
+
+void SimpleMesh::Deserialize(std::filesystem::path blobPath)
+{
+	std::ifstream meshBinary(blobPath, std::ios::in | std::ios::binary);
+	char* data = nullptr;
+	auto fileSize = std::filesystem::file_size(blobPath);
+	meshBinary.read(data, fileSize);
+
+
 }
 
 void SimpleMesh::DrawMesh()
@@ -80,6 +98,14 @@ void SimpleMesh::DrawMesh()
 	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 
 	m_modelCB->FlipCBIndex();
+}
+
+void SimpleMesh::Serialize(std::filesystem::path pathToSerialize)
+{
+	std::ofstream meshBinary(pathToSerialize, std::ios::binary);	
+	meshBinary.write((char*)&m_meshHeader, sizeof(EngineMeshHeader));
+	meshBinary.write((char*)m_Vertices, m_meshHeader.vertexByteSize);
+	meshBinary.write((char*)m_Indicies, m_meshHeader.indexByteSize);
 }
 
 // ----------------------- Mesh ----------------------- //

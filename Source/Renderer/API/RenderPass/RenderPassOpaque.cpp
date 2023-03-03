@@ -127,13 +127,9 @@ void RenderPass2D::RunPass(ID3D12GraphicsCommandList* cmdList)
 	m_cameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
 	m_cameraCB->SendConstantDataToGPU();
 	m_cameraCB->SetAsInlineRootDescriptor(cmdList, 0);
-	//m_texture->SetAsGraphicsRootDescriptorTable(cmdList, 1);
 
 	for (auto& mehes : m_meshes)
 	{
-		//cmdList->IASetVertexBuffers(0, 1, &vertexBuffer->GetVertexBufferView());
-		//cmdList->IASetIndexBuffer(&vertexBuffer->GetIndexBufferView());
-		//cmdList->DrawIndexedInstanced(vertexBuffer->GetIndexCount(), 1, 0, 0, 0);
 		mehes->DrawMesh();
 	}
 

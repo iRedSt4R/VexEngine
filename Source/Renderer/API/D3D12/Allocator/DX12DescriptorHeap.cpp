@@ -71,6 +71,8 @@ ID3D12Resource* DX12ResoruceAllocator::AllocateConstantBuffer(uint32_t CBSize)
 
 DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath)
 {
+	std::filesystem::path pp(filePath);
+
 	DX12Resource* returnResource = new DX12Resource();
 	ID3D12Resource* shaderResource;
 
@@ -81,13 +83,36 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
 	metadata.format = DirectX::MakeSRGB(metadata.format); // just add _sRGB to the dx12 format, so it will automatically apply gamma correction (?)
 
+	// Save image as dds (and generate mipmaps)
+	DirectX::ScratchImage imgWithMipMaps;
+	auto hrr = DirectX::GenerateMipMaps(*scratchImage.GetImage(0, 0, 0), DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 8, imgWithMipMaps);
+
+
+	size_t mipLevels = 0;
+	if (hrr == S_OK)
+	{
+		metadata = imgWithMipMaps.GetMetadata();
+		metadata.format = DirectX::MakeSRGB(metadata.format);
+		//metadata.mipLevels = 4;
+		mipLevels = 8;
+	}
+	//DirectX::ScratchImage imgInBC2;
+	//hr = DirectX::Convert(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), srcMetadata, DXGI_FORMAT_BC2_UNORM, DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 0.5f, imgInBC2);
+	//hr = DirectX::Compress(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), imgWithMipMaps.GetMetadata(), true ? DXGI_FORMAT_BC3_UNORM : DXGI_FORMAT_BC1_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgInBC2);
+
+	//auto fileToWrite = pp.filename().wstring().c_str();
+	//pp.replace_extension(".dds");
+	//hr = DirectX::SaveToDDSFile(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), imgWithMipMaps.GetMetadata(), DDS_FLAGS_NONE, pp.filename().wstring().c_str());
+
+
 	// Fill the resource desc
 	D3D12_RESOURCE_DESC textureDesc{};
 	textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
 		metadata.format,
 		static_cast<UINT64>(metadata.width),
 		static_cast<UINT>(metadata.height),
-		static_cast<UINT16>(metadata.arraySize)
+		static_cast<UINT16>(metadata.arraySize),
+		static_cast<UINT16>(metadata.mipLevels)
 	);
 
 	// Creating committed resource from desc
@@ -101,13 +126,24 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 		IID_PPV_ARGS(&shaderResource));
 
 	// subresource info for copying
-	const DirectX::Image* pImages = scratchImage.GetImages();
-	D3D12_SUBRESOURCE_DATA subresource;
-	subresource.RowPitch = pImages[0].rowPitch;
-	subresource.SlicePitch = pImages[0].slicePitch;
-	subresource.pData = pImages[0].pixels;
+	const DirectX::Image* pImages;
+	if (hrr == S_OK)
+		pImages = imgWithMipMaps.GetImages();
+	else
+		pImages = scratchImage.GetImages();
 
-	UINT64 requiredSize = GetRequiredIntermediateSize(shaderResource, 0, 1);
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources(hrr == S_OK ? imgWithMipMaps.GetImageCount() : scratchImage.GetImageCount());
+	const Image* pImagess = hrr == S_OK ? imgWithMipMaps.GetImages() : scratchImage.GetImages();
+
+	for (int i = 0; i < subresources.size(); ++i) {
+
+		auto& subresource = subresources[i];
+		subresource.RowPitch = pImagess[i].rowPitch;
+		subresource.SlicePitch = pImagess[i].slicePitch;
+		subresource.pData = pImagess[i].pixels;
+	}
+
+	UINT64 requiredSize = GetRequiredIntermediateSize(shaderResource, 0, subresources.size());
 
 	ID3D12Resource* intermediateResource;
 	heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -127,7 +163,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	}
 
 	// Update data through upload heap
-	UpdateSubresources(cmdList, shaderResource, intermediateResource, 0, 0, 1, &subresource);
+	UpdateSubresources(cmdList, shaderResource, intermediateResource, 0, 0, subresources.size(), subresources.data());
 
 	// Change resource state from copy_dest to pixel_shader_resource
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(shaderResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -140,7 +176,10 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
+	if (hrr == S_OK)
+		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
+	else
+		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
 	m_device->CreateShaderResourceView(shaderResource, &srvDesc, descMemory.m_CpuDescriptorMemory);
 	m_srvNumber++;
 
