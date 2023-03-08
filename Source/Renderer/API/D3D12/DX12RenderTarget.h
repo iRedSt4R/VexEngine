@@ -7,7 +7,7 @@ public:
 	DX12RenderTarget();
 	~DX12RenderTarget();
 
-	void Init(ID3D12Device* device, uint8_t colorBufferCount, bool withDepthStencilBuffer);
+	void Init(ID3D12Device* device, uint8_t colorBufferCount, bool withDepthStencilBuffer, bool bInitAsUAV = false);
 
 	void ClearAll();
 	void ClearAllColorBuffers();

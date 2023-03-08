@@ -10,7 +10,7 @@ DX12RenderTarget::~DX12RenderTarget()
 
 }
 
-void DX12RenderTarget::Init(ID3D12Device* device, uint8_t colorBufferCount, bool withDepthStencilBuffer)
+void DX12RenderTarget::Init(ID3D12Device* device, uint8_t colorBufferCount, bool withDepthStencilBuffer, bool bInitUAV)
 {
 	m_device = device;
 

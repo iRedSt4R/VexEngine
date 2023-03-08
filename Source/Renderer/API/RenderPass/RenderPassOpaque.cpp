@@ -2,17 +2,28 @@
 
 #include "../D3D12/ShaderCompiler/DX12ShaderLibrary.h"
 
-void RenderPass2D::Create(ID3D12Device* device)
+void RenderPassStaticOpaque::Create(ID3D12Device* device)
 {
 	m_device = device;
 
 	m_cameraCB = new ConstantBuffer<CameraCB>(m_device);
 
 	// vertex layout
+	/*
 	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+	*/
+
+	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
@@ -27,7 +38,8 @@ void RenderPass2D::Create(ID3D12Device* device)
 	// 1 Constant buffers:
 	// 0: camera CB (view/projection)
 	// 1: model CB (model) 
-	// 2: descriptor table (size 1) for srv texture
+	// 2: dirLight CB
+	// 3: descriptor table (size 1) for srv texture
 	
 	// cbv
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
@@ -36,6 +48,9 @@ void RenderPass2D::Create(ID3D12Device* device)
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor2;
 	rootCBVDescriptor2.RegisterSpace = 0;
 	rootCBVDescriptor2.ShaderRegister = 1;
+	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor3;
+	rootCBVDescriptor3.RegisterSpace = 0;
+	rootCBVDescriptor3.ShaderRegister = 2;
 	// srv table
 	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
 	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -48,7 +63,7 @@ void RenderPass2D::Create(ID3D12Device* device)
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0];
 
 	// combine parameters
-	D3D12_ROOT_PARAMETER  rootParameters[3];
+	D3D12_ROOT_PARAMETER  rootParameters[4];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -57,9 +72,13 @@ void RenderPass2D::Create(ID3D12Device* device)
 	rootParameters[1].Descriptor = rootCBVDescriptor2;
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[2].DescriptorTable = descriptorTable;
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[2].Descriptor = rootCBVDescriptor3;
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[3].DescriptorTable = descriptorTable;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	// add sapler for texture
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -114,29 +133,35 @@ void RenderPass2D::Create(ID3D12Device* device)
 	HRESULT hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineStateObject));
 }
 
-void RenderPass2D::BeginPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::BeginPass(ID3D12GraphicsCommandList* cmdList)
 {
 	cmdList->SetPipelineState(m_PipelineStateObject);
 	cmdList->SetGraphicsRootSignature(m_RootSignature);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void RenderPass2D::RunPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::RunPass(ID3D12GraphicsCommandList* cmdList)
 {
 	m_cameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
 	m_cameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
 	m_cameraCB->SendConstantDataToGPU();
 	m_cameraCB->SetAsInlineRootDescriptor(cmdList, 0);
 
+	m_lightManager->GetDirectionalLight()->SetAsInlineRootDescriptor(cmdList, 2);
+
 	for (auto& mehes : m_meshes)
 	{
 		mehes->DrawMesh();
 	}
 
+	// move flipping cb index to the end of the frame (it should be called one time after all the drawing)
 	m_cameraCB->FlipCBIndex();
+
+
+	m_lightManager->GetDirectionalLight()->GetDirectionalLightCB()->FlipCBIndex();
 }
 
-void RenderPass2D::EndPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::EndPass(ID3D12GraphicsCommandList* cmdList)
 {
 
 }

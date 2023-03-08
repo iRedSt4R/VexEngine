@@ -2,6 +2,7 @@
 #include <API/D3D12/DX12Renderer.h>
 #include <API/Camera/FPSCamera.h>
 #include <API/Textures/2DTexture.h>
+#include <API/Light/LightManager.h>
 
 class SandboxApp : public IApplication
 {
@@ -20,6 +21,8 @@ public:
 private:
 	Win64App* m_winApp = nullptr;
 	DX12Renderer* m_renderer = nullptr;
+	LightManager* m_lightNamanger = nullptr;
+	DirectionalLight* m_dirLight = nullptr;
 
 	std::vector<IRenderPass*> m_renderPasses = {};
 

@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 #define SCALE 0.005f
-#define VERTEX_ATTRIBUTE_COUNT 5
+#define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
 {
@@ -34,14 +34,25 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 	m_Vertices = new float[aMesh->mNumVertices * VERTEX_ATTRIBUTE_COUNT];
 	for (unsigned int vertexID = 0; vertexID < aMesh->mNumVertices; vertexID++)
 	{
-		// Position
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 0] = aMesh->mVertices[vertexID].x * SCALE;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 1] = aMesh->mVertices[vertexID].y * SCALE;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 2] = aMesh->mVertices[vertexID].z * SCALE;
 
-		// text coord
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 3] = aMesh->mTextureCoords[0][vertexID].x;
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 4] = aMesh->mTextureCoords[0][vertexID].y;
+		// Normal
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 3] = aMesh->mNormals[vertexID].x;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 4] = aMesh->mNormals[vertexID].y;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 5] = aMesh->mNormals[vertexID].z;
+
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 6] = aMesh->mTextureCoords[0][vertexID].x;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 7] = aMesh->mTextureCoords[0][vertexID].y;
+
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 8] = aMesh->mTangents[vertexID].x;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 9] = aMesh->mTangents[vertexID].y;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 10] = aMesh->mTangents[vertexID].z;
+
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 11] = aMesh->mBitangents[vertexID].x;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
+		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
 	}
 
 	// Load indices from faces
@@ -94,7 +105,7 @@ void SimpleMesh::DrawMesh()
 {
 	m_IndexedVertexBuffer->Set(m_CmdList);
 	m_modelCB->SetAsInlineRootDescriptor(m_CmdList, 1);
-	m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 2);
+	m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
 	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 
 	m_modelCB->FlipCBIndex();
