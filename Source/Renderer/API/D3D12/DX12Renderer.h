@@ -34,6 +34,9 @@ public:
 	void PreDraw(uint8_t contextID);
 	void EndDraw(uint8_t contextID);
 
+	// Misc functions
+	void BindSwapchainToRTV();
+
 	// Contexts data passing:
 	__forceinline void SetIndexedVertexBuffer(uint8_t contextID, DX12IndexedVertexBuffer* indexedVertexBuffer) 
 	{ 

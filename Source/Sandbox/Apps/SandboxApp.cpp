@@ -3,25 +3,43 @@
 
 void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 {
+	// WinApi App
 	m_winApp = new Win64App;
 	m_winApp->Init(hInstance, width, height);
 
 	m_winApp->AddLoopCallbacks(std::bind(&SandboxApp::Begin, this), std::bind(&SandboxApp::Update, this), std::bind(&SandboxApp::End, this));
 	DisplayManager::Get()->SetCurrentApp(m_winApp);
 
+	// Init renderer
 	m_renderer = DX12Renderer::Get();
 	m_renderer->Create(width, height, 2, m_winApp->GetWindowHandle());
 
+	// fps camera
 	m_camera = new FPSCamera(width, height);
 	m_camera->Create();
 
+	// sponza mesh
 	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
 	m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
 
+	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.5f, 0.5f, -0.8f), XMFLOAT3(1.f, 1.f, 0.8f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.5f, 0.5f, -0.8f), XMFLOAT3(1.f, 1.f, 1.0f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
+
+	// shadow framebuffer
+	m_shadowDepthTexture = DX12ResoruceAllocator::Get()->AllocateDepthTexture2D(1024, 1024, DXGI_FORMAT_D32_FLOAT, true, false);
+
+	// passes defs:
+	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
+	shadowPass->AddMesh(m_mesh);
+	shadowPass->AddLightManager(m_lightNamanger);
+	shadowPass->AddDepthBuffer(m_shadowDepthTexture);
+	shadowPass->Create(m_renderer->GetD3D12Device());
+	m_renderPasses.push_back(shadowPass);
+
+	
 
 	RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
 	twoDPass->Create(m_renderer->GetD3D12Device());
@@ -31,7 +49,7 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	m_renderPasses.push_back(twoDPass);
 
 
-	// From this call the m_WinApp will control the application flow from windows callbacks
+	// From this call the m_WinApp will control the application flow from windows callbacks to Begin(), Update() and End()
 	m_winApp->AppLoop();
 }
 
@@ -49,6 +67,8 @@ void SandboxApp::Update()
 		renderPass->BeginPass(m_renderer->GetContextCmdList(0));
 		renderPass->RunPass(m_renderer->GetContextCmdList(0));
 		renderPass->EndPass(m_renderer->GetContextCmdList(0));
+
+		m_renderer->BindSwapchainToRTV();
 	}
 }
 

@@ -29,6 +29,13 @@ struct CameraCB
 	XMFLOAT3X4 pad2;
 };
 
+struct ShadowCameraCB
+{
+	XMFLOAT4X4 viewMatrix;
+	XMFLOAT4X4 projectionMatrix;
+	XMFLOAT4X4 viewProjectionMatrix;
+};
+
 struct CBSceneModel
 {
 	XMFLOAT4X4 modelMatrix;

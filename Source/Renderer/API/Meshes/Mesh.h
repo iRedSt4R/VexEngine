@@ -36,7 +36,7 @@ public:
 	~SimpleMesh() {};
 
 	void LoadMesh(const aiScene* scene, int meshIndex, std::string meshFolder);
-	void DrawMesh();
+	void DrawMesh(bool bShadow = false);
 	void Serialize(std::filesystem::path pathToSerialize);
 	void Deserialize(std::filesystem::path blobPath);
 
@@ -70,7 +70,7 @@ public:
 	~Mesh() {};
 
 	void LoadMesh(std::string filePath, std::string meshFolder);
-	void DrawMesh();
+	void DrawMesh(bool bShadow = false);
 
 private:
 	std::vector<SimpleMesh*> m_Meshes;

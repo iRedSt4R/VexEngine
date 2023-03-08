@@ -1,11 +1,12 @@
 #pragma once
-#include "RenderPassBase.h"
 #include "../../Common/VexRenderCommon.h"
-#include "../D3D12/ShaderCompiler/DX12ShaderLibrary.h"
+#include "RenderPassBase.h"
 #include <dxcapi.h>
+#include "../D3D12/ShaderCompiler/DX12ShaderLibrary.h"
 #include "../D3D12/DX12IndexedVertexBuffer.h"
-#include "../Camera/FPSCamera.h"
 #include "../D3D12/DX12ConstantBuffer.h"
+#include "../Camera/FPSCamera.h"
+#include "../Camera/ShadowCamera.h"
 #include "../Textures/2DTexture.h"
 #include "../Meshes/Mesh.h"
 #include "../Light/LightManager.h"
@@ -49,19 +50,34 @@ private:
 // pass for shadow map generation:
 class RenderPassShadowMap : public RenderPassBase
 {
+public:
 	void Create(ID3D12Device* device) override final;
 	void BeginPass(ID3D12GraphicsCommandList* cmdList) override final;
 	void RunPass(ID3D12GraphicsCommandList* cmdList) override final;
 	void EndPass(ID3D12GraphicsCommandList* cmdList) override final;
 
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
+	void AddDepthBuffer(DX12Resource* shadowDepthRes) { m_shadowDepth = shadowDepthRes; }
+	void AddLightManager(LightManager* lightManager) { m_lightManager = lightManager; }
 
 private:
 	// Root signature and PSO unique to this pass
 	ID3D12RootSignature* m_RootSignature;
 	ID3D12PipelineState* m_PipelineStateObject;
 
+	// vs
+	D3D12_SHADER_BYTECODE m_vsShader;
+
 	// meshes
 	std::vector<Mesh*> m_meshes = {};
-	ConstantBuffer<CameraCB>* m_cameraCB;
+
+	// shadow camera
+	ConstantBuffer<ShadowCameraCB>* m_shadowCameraCB;
+	ShadowCamera* m_shadowCamera = nullptr;
+
+	// depth RT
+	DX12Resource* m_shadowDepth = nullptr;
+
+	// light data for shadows
+	LightManager* m_lightManager = nullptr;
 };

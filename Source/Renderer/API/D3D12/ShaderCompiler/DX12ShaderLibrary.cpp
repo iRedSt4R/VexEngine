@@ -8,6 +8,8 @@ DX12ShaderLibrary::DX12ShaderLibrary()
 	CompileAndAddVertexShader(L"../../Source/Renderer/Shaders/2D/2d_vs_color.hlsl");
 	CompileAndAddPixelShader(L"../../Source/Renderer/Shaders/2D/2d_ps_color.hlsl");
 
+	CompileAndAddVertexShader(L"../../Source/Renderer/Shaders/2D/vs_depth_pass.hlsl");
+
 }
 
 DX12ShaderLibrary::~DX12ShaderLibrary()

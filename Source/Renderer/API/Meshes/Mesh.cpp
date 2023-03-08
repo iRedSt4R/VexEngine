@@ -97,18 +97,18 @@ void SimpleMesh::Deserialize(std::filesystem::path blobPath)
 	char* data = nullptr;
 	auto fileSize = std::filesystem::file_size(blobPath);
 	meshBinary.read(data, fileSize);
-
-
 }
 
-void SimpleMesh::DrawMesh()
+void SimpleMesh::DrawMesh(bool bShadow)
 {
 	m_IndexedVertexBuffer->Set(m_CmdList);
-	m_modelCB->SetAsInlineRootDescriptor(m_CmdList, 1);
-	m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
+	if (!bShadow)
+	{
+		m_modelCB->SetAsInlineRootDescriptor(m_CmdList, 1);
+		m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
+		m_modelCB->FlipCBIndex();
+	}
 	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
-
-	m_modelCB->FlipCBIndex();
 }
 
 void SimpleMesh::Serialize(std::filesystem::path pathToSerialize)
@@ -135,10 +135,10 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	}
 }
 
-void Mesh::DrawMesh()
+void Mesh::DrawMesh(bool bShadow)
 {
 	for (auto& mesh : m_Meshes)
 	{
-		mesh->DrawMesh();
+		mesh->DrawMesh(bShadow);
 	}
 }

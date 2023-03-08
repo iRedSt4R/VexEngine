@@ -107,6 +107,14 @@ void DX12Renderer::EndDraw(uint8_t contextID)
 
 }
 
+void DX12Renderer::BindSwapchainToRTV()
+{
+	auto colorView = m_swapChain->GetBackBufferDescriptorHandle();
+	auto depthView = m_swapChain->GetDepthStencilView();
+	m_renderContexts[0]->m_cmdList->OMSetRenderTargets(1, &colorView, FALSE, &depthView);
+	//m_swapChain->GetCurrentBackBufferRenderTarget
+}
+
 DX12IndexedVertexBuffer* DX12Renderer::CreateIndexedVertexBuffer(int vertexBufferByteSize, int vertexBufferStride, int indexCount, void* vbData, void* ibData)
 {
 	DX12IndexedVertexBuffer* retBuffer = new DX12IndexedVertexBuffer(m_device->GetDevice());

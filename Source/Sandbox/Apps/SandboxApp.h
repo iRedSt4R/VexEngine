@@ -26,6 +26,9 @@ private:
 
 	std::vector<IRenderPass*> m_renderPasses = {};
 
+	// RTs
+	DX12Resource* m_shadowDepthTexture = nullptr;
+
 	//window data:
 	uint32_t m_height = 0;
 	uint32_t m_width = 0;;

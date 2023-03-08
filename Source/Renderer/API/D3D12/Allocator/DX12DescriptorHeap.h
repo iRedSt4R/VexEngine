@@ -45,8 +45,12 @@ public:
 	{ 
 		m_device = device;
 
-		m_descHeap = new DX12DescriptorHeap(device, cmdList);
-		m_descHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 256, true);
+		m_shaderVisibleDescHeap = new DX12DescriptorHeap(device, cmdList);
+		m_shaderVisibleDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1024, true);
+
+		m_depthDescHeap = new DX12DescriptorHeap(device, cmdList);
+		m_depthDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 256, false);
+
 	}
 
 	static DX12ResoruceAllocator* Get()
@@ -60,17 +64,21 @@ public:
 
 	void BindDescHeap(ID3D12GraphicsCommandList* cmdList)
 	{
-		ID3D12DescriptorHeap* ppHeaps[] = { m_descHeap->GetDescriptorHeap() };
+		ID3D12DescriptorHeap* ppHeaps[] = { m_shaderVisibleDescHeap->GetDescriptorHeap() };
 		cmdList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	}
 	ID3D12Resource* AllocateConstantBuffer(uint32_t CBSize);
 	DX12Resource* AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath);
+	DX12Resource* AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV);
 
 private:
 	inline static DX12ResoruceAllocator* s_instance = nullptr;
 
 	ID3D12Device* m_device = nullptr;
-	DX12DescriptorHeap* m_descHeap = nullptr; // desc heap for all shader visible CBVs/SRVs/UAVs
+	// one global heap for all types, contains all needed descriptors for given level
+	DX12DescriptorHeap* m_shaderVisibleDescHeap = nullptr; // desc heap for all shader visible CBVs/SRVs/UAVs
+	DX12DescriptorHeap* m_depthDescHeap = nullptr;
+	DX12DescriptorHeap* m_RTVHeap = nullptr;
 
 	uint32_t m_constantBufferNumber = 0;
 	uint32_t m_srvNumber = 0;

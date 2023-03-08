@@ -170,7 +170,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	cmdList->ResourceBarrier(1, &barrier);
 
 	// Create SRV from resource
-	DX12DescriptorMemory descMemory = m_descHeap->GetFreeDescriptorMemory();
+	DX12DescriptorMemory descMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -185,8 +185,73 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 
 	// create final DX12Resource
 	returnResource->AddResource(shaderResource);
-	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory);
+	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory);
 
 	// return SRV
+	return returnResource;
+}
+
+DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV)
+{
+	DX12Resource* returnResource = new DX12Resource();
+	ID3D12Resource* res;
+
+	// resource:
+	D3D12_RESOURCE_DESC depthDesc = {};
+	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthDesc.Alignment = 0;
+	depthDesc.Width = (UINT64)width;
+	depthDesc.Height = (UINT)height;
+	depthDesc.DepthOrArraySize = 1;
+	depthDesc.MipLevels = 1;
+	depthDesc.Format = textureFormat;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE, // todo: change flag to more optimized
+		&depthDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		nullptr,
+		IID_PPV_ARGS(&res));
+
+	returnResource->SetCurrentState(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	returnResource->AddResource(res);
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
+	// DSV:
+	DX12DescriptorMemory descMemory = m_depthDescHeap->GetFreeDescriptorMemory();
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthView = {};
+	depthView.Format = DXGI_FORMAT_D32_FLOAT;
+	depthView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthView.Flags = D3D12_DSV_FLAG_NONE;
+	depthView.Texture2D.MipSlice = 0;
+	m_device->CreateDepthStencilView(res, &depthView, descMemory.m_CpuDescriptorMemory);
+	returnResource->AddDSV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory);
+
+	// SRV:
+	if (initSRV)
+	{
+		DX12DescriptorMemory srvMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		m_device->CreateShaderResourceView(res, &srvDesc, srvMemory.m_CpuDescriptorMemory);
+		returnResource->AddSRV(srvMemory.m_GpuDescriptorMemory, srvMemory.m_CpuDescriptorMemory);
+	}
+
 	return returnResource;
 }
