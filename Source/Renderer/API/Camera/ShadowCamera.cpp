@@ -1,6 +1,6 @@
 #include "ShadowCamera.h"
 
-#define DIR_CAMERA_HEIGHT 50.f
+#define DIR_CAMERA_HEIGHT 20.f
 
 void ShadowCamera::InitWithDirectionalLight(DirectionalLight* dirLight, float orthoWidth, float orthoHeight, float nearFlane, float farPlane)
 {
@@ -18,6 +18,7 @@ void ShadowCamera::InitWithDirectionalLight(DirectionalLight* dirLight, float or
 	//XMFLOAT3 temp = XMFLOAT3(dirLight->GetLightDirection().x, dirLight->GetLightDirection().y, dirLight->GetLightDirection().z);
 
 	XMFLOAT4 m_CameraPositon = XMFLOAT4(dirLight->GetLightDirection().x * DIR_CAMERA_HEIGHT, dirLight->GetLightDirection().y * DIR_CAMERA_HEIGHT, dirLight->GetLightDirection().z * DIR_CAMERA_HEIGHT, 0.0f);
+	//XMFLOAT4 m_CameraPositon = XMFLOAT4(-2.f, 4.f, -1.f, 0.0f);
 	XMFLOAT4 m_CameraTarget = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 	XMFLOAT4 m_CameraUp = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -25,5 +26,6 @@ void ShadowCamera::InitWithDirectionalLight(DirectionalLight* dirLight, float or
 	XMVECTOR camUp = XMLoadFloat4(&m_CameraTarget);
 	XMVECTOR camPos = XMLoadFloat4(&m_CameraUp);
 	XMMATRIX shadowViewTemp = XMMatrixLookAtLH(camTarget, camUp, camPos);
+	shadowViewTemp = XMMatrixTranspose(shadowViewTemp);
 	XMStoreFloat4x4(&m_shadowView, shadowViewTemp);
 }

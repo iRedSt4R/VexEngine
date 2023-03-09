@@ -59,6 +59,7 @@ public:
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
 	void AddDepthBuffer(DX12Resource* shadowDepthRes) { m_shadowDepth = shadowDepthRes; }
 	void AddLightManager(LightManager* lightManager) { m_lightManager = lightManager; }
+	void AddFPSCamera(FPSCamera* fpsCamera) { m_camera = fpsCamera; }
 
 private:
 	// Root signature and PSO unique to this pass
@@ -74,6 +75,7 @@ private:
 	// shadow camera
 	ConstantBuffer<ShadowCameraCB>* m_shadowCameraCB;
 	ShadowCamera* m_shadowCamera = nullptr;
+	FPSCamera* m_camera = nullptr;
 
 	// depth RT
 	DX12Resource* m_shadowDepth = nullptr;

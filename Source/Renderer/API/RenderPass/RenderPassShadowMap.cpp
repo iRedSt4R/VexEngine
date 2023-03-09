@@ -72,18 +72,38 @@ void RenderPassShadowMap::Create(ID3D12Device* device)
 
 void RenderPassShadowMap::BeginPass(ID3D12GraphicsCommandList* cmdList)
 {
-	m_shadowCamera->InitWithDirectionalLight(m_lightManager->GetDirectionalLight(), 50.f, 50.f, 1.f, 100.f);
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 3840.f;
+	viewport.Height = 2160.f;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
 
+	D3D12_RECT rect = {};
+	rect.left = 0;
+	rect.top = 0;
+	rect.right = 3840.f;
+	rect.bottom = 2160.f;
+	cmdList->RSSetViewports(1, &viewport);
+	cmdList->RSSetScissorRects(1, &rect);
+
+	auto depthView = m_shadowDepth->GetDSV_CPU();
+	m_shadowCamera->InitWithDirectionalLight(m_lightManager->GetDirectionalLight(), 25.f * 1.77777777778f, 25.f, 0.1f, 100.f);
+
+	cmdList->ClearDepthStencilView(depthView, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	cmdList->SetPipelineState(m_PipelineStateObject);
 	cmdList->SetGraphicsRootSignature(m_RootSignature);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	auto depthView = m_shadowDepth->GetDSV_CPU();
 	cmdList->OMSetRenderTargets(0, nullptr, FALSE, &depthView);
 	//cmdList->Depth
 }
 
 void RenderPassShadowMap::RunPass(ID3D12GraphicsCommandList* cmdList)
 {
+	//m_shadowCameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
+	//m_shadowCameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
+	// 
 	m_shadowCameraCB->CPUData().viewMatrix = m_shadowCamera->GetShadowView();
 	m_shadowCameraCB->CPUData().projectionMatrix = m_shadowCamera->GetShadowProjection();
 	m_shadowCameraCB->CPUData().viewProjectionMatrix = m_shadowCamera->GetShadowViewProjection();

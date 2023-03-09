@@ -25,17 +25,18 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.5f, 0.5f, -0.8f), XMFLOAT3(1.f, 1.f, 1.0f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(1.f, 1.f, 1.0f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
 
 	// shadow framebuffer
-	m_shadowDepthTexture = DX12ResoruceAllocator::Get()->AllocateDepthTexture2D(1024, 1024, DXGI_FORMAT_D32_FLOAT, true, false);
+	m_shadowDepthTexture = DX12ResoruceAllocator::Get()->AllocateDepthTexture2D(3840, 2160, DXGI_FORMAT_D32_FLOAT, true, false);
 
 	// passes defs:
 	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
 	shadowPass->AddMesh(m_mesh);
 	shadowPass->AddLightManager(m_lightNamanger);
 	shadowPass->AddDepthBuffer(m_shadowDepthTexture);
+	shadowPass->AddFPSCamera(m_camera);
 	shadowPass->Create(m_renderer->GetD3D12Device());
 	m_renderPasses.push_back(shadowPass);
 
@@ -62,13 +63,17 @@ void SandboxApp::Update()
 {
 	m_camera->Update(m_width, m_height, m_winApp->GetMouseDeltaX(), m_winApp->GetMouseDeltaY());
 
+	uint16_t id = 0;
 	for (auto& renderPass : m_renderPasses)
 	{
 		renderPass->BeginPass(m_renderer->GetContextCmdList(0));
 		renderPass->RunPass(m_renderer->GetContextCmdList(0));
 		renderPass->EndPass(m_renderer->GetContextCmdList(0));
 
-		m_renderer->BindSwapchainToRTV();
+		if(id == 0)
+			m_renderer->BindSwapchainToRTV();
+
+		id++;
 	}
 }
 

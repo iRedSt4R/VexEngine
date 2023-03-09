@@ -39,7 +39,8 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 	// 0: camera CB (view/projection)
 	// 1: model CB (model) 
 	// 2: dirLight CB
-	// 3: descriptor table (size 1) for srv texture
+	// 3: descriptor table (size 1) x2 for srv textures
+	// 5 shadowLight CB
 	
 	// cbv
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
@@ -51,19 +52,29 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor3;
 	rootCBVDescriptor3.RegisterSpace = 0;
 	rootCBVDescriptor3.ShaderRegister = 2;
+	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor4;
+	rootCBVDescriptor4.RegisterSpace = 0;
+	rootCBVDescriptor4.ShaderRegister = 3;
+
 	// srv table
-	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
+	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[2];
 	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorTableRanges[0].NumDescriptors = 1;
 	descriptorTableRanges[0].BaseShaderRegister = 0; // tx in shader, t0 in this case
 	descriptorTableRanges[0].RegisterSpace = 0;
 	descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	descriptorTableRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorTableRanges[1].NumDescriptors = 1;
+	descriptorTableRanges[1].BaseShaderRegister = 1; // tx in shader, t0 in this case
+	descriptorTableRanges[1].RegisterSpace = 0;
+	descriptorTableRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges);
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0];
 
 	// combine parameters
-	D3D12_ROOT_PARAMETER  rootParameters[4];
+	D3D12_ROOT_PARAMETER  rootParameters[5];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -79,6 +90,10 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[3].DescriptorTable = descriptorTable;
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[4].Descriptor = rootCBVDescriptor4;
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	// add sapler for texture
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -135,6 +150,22 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 
 void RenderPassStaticOpaque::BeginPass(ID3D12GraphicsCommandList* cmdList)
 {
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 1920.f;
+	viewport.Height = 1080.f;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	D3D12_RECT rect = {};
+	rect.left = 0;
+	rect.top = 0;
+	rect.right = 1920.f;
+	rect.bottom = 1080.f;
+	cmdList->RSSetViewports(1, &viewport);
+	cmdList->RSSetScissorRects(1, &rect);
+
 	cmdList->SetPipelineState(m_PipelineStateObject);
 	cmdList->SetGraphicsRootSignature(m_RootSignature);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

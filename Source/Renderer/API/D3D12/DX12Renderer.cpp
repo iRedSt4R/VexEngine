@@ -109,7 +109,7 @@ void DX12Renderer::EndDraw(uint8_t contextID)
 
 void DX12Renderer::BindSwapchainToRTV()
 {
-	auto colorView = m_swapChain->GetBackBufferDescriptorHandle();
+	auto colorView = m_swapChain->GetCurrentBackBufferHandle();
 	auto depthView = m_swapChain->GetDepthStencilView();
 	m_renderContexts[0]->m_cmdList->OMSetRenderTargets(1, &colorView, FALSE, &depthView);
 	//m_swapChain->GetCurrentBackBufferRenderTarget
