@@ -20,28 +20,30 @@ void DX12Resource::AddResource(ID3D12Resource* resource)
 	m_resource = resource;
 }
 
-void DX12Resource::AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_CPU)
+void DX12Resource::AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_CPU, uint32_t indexInsideHeap)
 {
 	m_bHaveSRV = true;
 	m_SRV_CPU = srvHandle_CPU;
 	m_SRV = srvHandle;
+	m_SRVIndexInsideShaderVisibleHeap = indexInsideHeap;
 }
 
-void DX12Resource::AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle, D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_CPU)
+void DX12Resource::AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle, D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_CPU, uint32_t indexInsideHeap)
 {
 	m_bHaveUAV = true;
 	m_UAV_CPU = uavHandle_CPU;
 	m_UAV = uavHandle;
+	m_UAVIndexInsideShaderVisibleHeap = indexInsideHeap;
 }
 
-void DX12Resource::AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_CPU)
+void DX12Resource::AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_CPU, uint32_t indexInsideHeap)
 {
 	m_bHaveRTV = true;
 	m_RTV_CPU = rtvHandle_CPU;
 	m_RTV = rtvHandle;
 }
 
-void DX12Resource::AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_CPU)
+void DX12Resource::AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_CPU, uint32_t indexInsideHeap)
 {
 	m_bHaveDSV = true;
 	m_DSV_CPU = dsvHandle_CPU;

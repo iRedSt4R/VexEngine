@@ -2,11 +2,12 @@
 
 static bool bInit = false;
 
-void RenderPassShadowMap::Create(ID3D12Device* device)
+void RenderPassShadowMap::Create(DX12Renderer* renderer)
 {
-	m_device = device;
+	m_renderer = renderer;
+	m_device = renderer->GetD3D12Device();
 	m_shadowCamera = new ShadowCamera();
-	m_shadowCameraCB = new ConstantBuffer<ShadowCameraCB>(device);
+	m_shadowCameraCB = new ConstantBuffer<ShadowCameraCB>(m_device);
 
 	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
 	{
@@ -54,24 +55,23 @@ void RenderPassShadowMap::Create(ID3D12Device* device)
 	psoDesc.InputLayout = inputLayoutDesc;
 	psoDesc.pRootSignature = m_RootSignature;
 	psoDesc.VS = m_vsShader;
-	//psoDesc.PS = D3D12_SHADER_BYTECODE{};
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 0;
-	//psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	psoDesc.SampleDesc = sampleDesc;
 	psoDesc.SampleMask = 0xffffffff;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-	//psoDesc.NumRenderTargets = 1;
 
 	// create the PSO
 	HRESULT hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineStateObject));
 }
 
-void RenderPassShadowMap::BeginPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassShadowMap::BeginPass(uint8_t contextID)
 {
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
 	D3D12_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -99,11 +99,10 @@ void RenderPassShadowMap::BeginPass(ID3D12GraphicsCommandList* cmdList)
 	//cmdList->Depth
 }
 
-void RenderPassShadowMap::RunPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassShadowMap::RunPass(uint8_t contextID)
 {
-	//m_shadowCameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
-	//m_shadowCameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
-	// 
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
 	m_shadowCameraCB->CPUData().viewMatrix = m_shadowCamera->GetShadowView();
 	m_shadowCameraCB->CPUData().projectionMatrix = m_shadowCamera->GetShadowProjection();
 	m_shadowCameraCB->CPUData().viewProjectionMatrix = m_shadowCamera->GetShadowViewProjection();
@@ -119,11 +118,9 @@ void RenderPassShadowMap::RunPass(ID3D12GraphicsCommandList* cmdList)
 	m_shadowCameraCB->FlipCBIndex();
 }
 
-void RenderPassShadowMap::EndPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassShadowMap::EndPass(uint8_t contextID)
 {
-	if(!bInit)
-	{
-		//m_shadowDepth->ChangeState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, cmdList);
-		//bInit = true;
-	}
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
+	m_renderer->BindSwapchainToRTV();
 }

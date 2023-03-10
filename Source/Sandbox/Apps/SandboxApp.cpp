@@ -37,13 +37,13 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	shadowPass->AddLightManager(m_lightNamanger);
 	shadowPass->AddDepthBuffer(m_shadowDepthTexture);
 	shadowPass->AddFPSCamera(m_camera);
-	shadowPass->Create(m_renderer->GetD3D12Device());
+	shadowPass->Create(m_renderer);
 	m_renderPasses.push_back(shadowPass);
 
 	
 
 	RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
-	twoDPass->Create(m_renderer->GetD3D12Device());
+	twoDPass->Create(m_renderer);
 	twoDPass->AddMesh(m_mesh);
 	twoDPass->AddCamera(m_camera);
 	twoDPass->SetLightManager(m_lightNamanger);
@@ -63,17 +63,11 @@ void SandboxApp::Update()
 {
 	m_camera->Update(m_width, m_height, m_winApp->GetMouseDeltaX(), m_winApp->GetMouseDeltaY());
 
-	uint16_t id = 0;
 	for (auto& renderPass : m_renderPasses)
 	{
-		renderPass->BeginPass(m_renderer->GetContextCmdList(0));
-		renderPass->RunPass(m_renderer->GetContextCmdList(0));
-		renderPass->EndPass(m_renderer->GetContextCmdList(0));
-
-		if(id == 0)
-			m_renderer->BindSwapchainToRTV();
-
-		id++;
+		renderPass->BeginPass(0);
+		renderPass->RunPass(0);
+		renderPass->EndPass(0);
 	}
 }
 

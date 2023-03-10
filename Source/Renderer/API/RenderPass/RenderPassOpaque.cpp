@@ -2,21 +2,14 @@
 
 #include "../D3D12/ShaderCompiler/DX12ShaderLibrary.h"
 
-void RenderPassStaticOpaque::Create(ID3D12Device* device)
+void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 {
-	m_device = device;
+	m_renderer = renderer;
+	m_device = renderer->GetD3D12Device();
 
 	m_cameraCB = new ConstantBuffer<CameraCB>(m_device);
 
 	// vertex layout
-	/*
-	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	};
-	*/
-
 	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -116,7 +109,7 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 	rootSignatureDesc.pParameters = rootParameters;
 	rootSignatureDesc.NumStaticSamplers = 1;
 	rootSignatureDesc.pStaticSamplers = &sampler;
-	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
 
 	//rootSignatureDesc.Init(1, rootParameters,  nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
@@ -148,8 +141,10 @@ void RenderPassStaticOpaque::Create(ID3D12Device* device)
 	HRESULT hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineStateObject));
 }
 
-void RenderPassStaticOpaque::BeginPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::BeginPass(uint8_t contextID)
 {
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
 	D3D12_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -171,8 +166,10 @@ void RenderPassStaticOpaque::BeginPass(ID3D12GraphicsCommandList* cmdList)
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void RenderPassStaticOpaque::RunPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::RunPass(uint8_t contextID)
 {
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
 	m_cameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
 	m_cameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
 	m_cameraCB->SendConstantDataToGPU();
@@ -185,14 +182,13 @@ void RenderPassStaticOpaque::RunPass(ID3D12GraphicsCommandList* cmdList)
 		mehes->DrawMesh();
 	}
 
-	// move flipping cb index to the end of the frame (it should be called one time after all the drawing)
+	// todo: move flipping cb index to the end of the frame (it should be called one time after all the drawing)
 	m_cameraCB->FlipCBIndex();
-
 
 	m_lightManager->GetDirectionalLight()->GetDirectionalLightCB()->FlipCBIndex();
 }
 
-void RenderPassStaticOpaque::EndPass(ID3D12GraphicsCommandList* cmdList)
+void RenderPassStaticOpaque::EndPass(uint8_t contextID)
 {
-
+	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
 }

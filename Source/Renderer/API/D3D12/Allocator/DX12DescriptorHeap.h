@@ -80,6 +80,7 @@ private:
 	DX12DescriptorHeap* m_depthDescHeap = nullptr;
 	DX12DescriptorHeap* m_RTVHeap = nullptr;
 
+	//uint32_t m_freeIndexInsideHeap = 0;
 	uint32_t m_constantBufferNumber = 0;
 	uint32_t m_srvNumber = 0;
 };

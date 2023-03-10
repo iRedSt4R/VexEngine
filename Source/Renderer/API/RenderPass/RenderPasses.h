@@ -16,16 +16,16 @@
 class RenderPassStaticOpaque : public RenderPassBase
 {
 public:
-	void Create(ID3D12Device* device) override final;
-	void BeginPass(ID3D12GraphicsCommandList* cmdList) override final;
-	void RunPass(ID3D12GraphicsCommandList* cmdList) override final;
-	void EndPass(ID3D12GraphicsCommandList* cmdList) override final;
+	void Create(DX12Renderer* renderer) override final;
+	void BeginPass(uint8_t contextID) override final;
+	void RunPass(uint8_t contextID) override final;
+	void EndPass(uint8_t contextID) override final;
 
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
 
 	void AddCamera(FPSCamera* camera) { m_camera = camera; }
 	void AddTexture(Texture2D* texture) { m_texture = texture; }
-
+	void AddShadowSRV(DX12Resource* depthSRV) { m_shadowDepth = depthSRV; }
 	void SetLightManager(LightManager* lightManager) { m_lightManager = lightManager; }
 
 private:
@@ -45,16 +45,19 @@ private:
 	ConstantBuffer<CameraCB>* m_cameraCB;
 	LightManager* m_lightManager = nullptr;
 
+	// depth SRV for shadows
+	DX12Resource* m_shadowDepth = nullptr;
+
 };
 
 // pass for shadow map generation:
 class RenderPassShadowMap : public RenderPassBase
 {
 public:
-	void Create(ID3D12Device* device) override final;
-	void BeginPass(ID3D12GraphicsCommandList* cmdList) override final;
-	void RunPass(ID3D12GraphicsCommandList* cmdList) override final;
-	void EndPass(ID3D12GraphicsCommandList* cmdList) override final;
+	void Create(DX12Renderer* renderer) override final;
+	void BeginPass(uint8_t contextID) override final;
+	void RunPass(uint8_t contextID) override final;
+	void EndPass(uint8_t contextID) override final;
 
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
 	void AddDepthBuffer(DX12Resource* shadowDepthRes) { m_shadowDepth = shadowDepthRes; }

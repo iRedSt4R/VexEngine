@@ -185,7 +185,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 
 	// create final DX12Resource
 	returnResource->AddResource(shaderResource);
-	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory);
+	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
 
 	// return SRV
 	return returnResource;
@@ -236,7 +236,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 	depthView.Flags = D3D12_DSV_FLAG_NONE;
 	depthView.Texture2D.MipSlice = 0;
 	m_device->CreateDepthStencilView(res, &depthView, descMemory.m_CpuDescriptorMemory);
-	returnResource->AddDSV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory);
+	returnResource->AddDSV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
 
 	// SRV:
 	if (initSRV)
@@ -250,7 +250,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 		srvDesc.Texture2D.MipLevels = 1;
 		srvDesc.Texture2D.MostDetailedMip = 0;
 		m_device->CreateShaderResourceView(res, &srvDesc, srvMemory.m_CpuDescriptorMemory);
-		returnResource->AddSRV(srvMemory.m_GpuDescriptorMemory, srvMemory.m_CpuDescriptorMemory);
+		returnResource->AddSRV(srvMemory.m_GpuDescriptorMemory, srvMemory.m_CpuDescriptorMemory, srvMemory.m_descriptorIndex);
 	}
 
 	return returnResource;

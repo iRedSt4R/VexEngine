@@ -20,10 +20,10 @@ public:
 
 	//void AddResource(D3D12MA::Allocation* allocation);
 	void AddResource(ID3D12Resource* resource);
-	void AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_CPU);
-	void AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle, D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_CPU);
-	void AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_CPU);
-	void AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_CPU);
+	void AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_CPU, uint32_t indexInsideHeap);
+	void AddUAV(D3D12_GPU_DESCRIPTOR_HANDLE uavHandle, D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_CPU, uint32_t indexInsideHeap);
+	void AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_CPU, uint32_t indexInsideHeap);
+	void AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_CPU, uint32_t indexInsideHeap);
 
 	// return true if barrier has to be executed, return false if resource was already in desired state (SINGLE THREADED)
 	//void AssureContextState(uint8_t contextID, D3D12_RESOURCE_STATES desiredState, ID3D12GraphicsCommandList* cmdList);
@@ -41,13 +41,6 @@ public:
 	__forceinline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV_CPU() { return m_RTV_CPU; }
 	__forceinline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_CPU() { return m_DSV_CPU; }
 
-	//__forceinline uint32_t GetSRVIndex() { return m_SRV; }
-	//__forceinline uint32_t GetUAVIndex() { return m_UAV; }
-	//__forceinline uint32_t GetRTVIndex() { return m_RTV; }
-	//__forceinline uint32_t GetDSVIndex() { return m_DSV; }
-
-	//__forceinline ID3D12Resource* GetResource() { return m_Allocation->GetResource(); }
-	//__forceinline D3D12MA::Allocation* GetAllocation() { return m_Allocation; }
 	__forceinline ID3D12Resource* GetResource() { return m_resource; }
 private:
 
@@ -65,6 +58,12 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_UAV_CPU = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_RTV_CPU = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_DSV_CPU = {};
+
+	uint32_t m_SRVIndexInsideShaderVisibleHeap = 0;
+	uint32_t m_UAVIndexInsideShaderVisibleHeap = 0;
+	uint32_t m_CBVIndexInsideShaderVisibleHeap = 0;
+	uint32_t m_DSVIndexInsideHeap = 0;
+	uint32_t m_RTVIndexInsideHeap = 0;
 
 	ID3D12Resource* m_resource = nullptr;
 	D3D12_RESOURCE_STATES m_currentResourceState = D3D12_RESOURCE_STATE_COMMON;
