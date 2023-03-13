@@ -25,11 +25,12 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(1.f, 1.f, 1.0f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(0.9f, 0.9f, 0.9f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
 
 	// shadow framebuffer
 	m_shadowDepthTexture = DX12ResoruceAllocator::Get()->AllocateDepthTexture2D(3840, 2160, DXGI_FORMAT_D32_FLOAT, true, false);
+	m_dirLight->SetShadowTextureIndex(m_shadowDepthTexture->GetSRVIndexInsideHeap());
 
 	// passes defs:
 	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();

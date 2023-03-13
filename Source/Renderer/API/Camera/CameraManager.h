@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FPSCamera.h"
+#include "ShadowCamera.h"
 
 class CameraManager
 {
@@ -27,6 +28,11 @@ public:
 		m_ActiveCamera = camera;
 	}
 
+	__forceinline void SetDirLightShadowCamera(ShadowCamera* shadowCamera)
+	{
+		m_dirLightSadowCam = shadowCamera;
+	}
+
 	__forceinline CameraBase* GetActiveCamera() { return m_ActiveCamera; }
 	__forceinline CameraBase* GetPrevActiveCamera() { return m_PrevActiveCamera; }
 
@@ -35,4 +41,6 @@ private:
 
 	CameraBase* m_ActiveCamera;
 	CameraBase* m_PrevActiveCamera;
+
+	ShadowCamera* m_dirLightSadowCam = nullptr;
 };

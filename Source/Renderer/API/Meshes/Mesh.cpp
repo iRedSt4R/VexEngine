@@ -101,12 +101,16 @@ void SimpleMesh::Deserialize(std::filesystem::path blobPath)
 
 void SimpleMesh::DrawMesh(bool bShadow)
 {
+	m_meshCB->CPUData().bHaveAlbedoTex = true;
+	m_meshCB->CPUData().albedoIndexInHeap = m_AlbedoSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
+	m_meshCB->SendConstantDataToGPU();
+
 	m_IndexedVertexBuffer->Set(m_CmdList);
 	if (!bShadow)
 	{
-		m_modelCB->SetAsInlineRootDescriptor(m_CmdList, 1);
-		m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
-		m_modelCB->FlipCBIndex();
+		m_meshCB->SetAsInlineRootDescriptor(m_CmdList, 1);
+		//m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
+		//m_modelCB->FlipCBIndex();
 	}
 	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 }

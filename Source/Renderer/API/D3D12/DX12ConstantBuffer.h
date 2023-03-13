@@ -41,6 +41,19 @@ struct CBSceneModel
 	XMFLOAT4X4 modelMatrix;
 };
 
+struct CBStaticMeshData
+{
+	XMFLOAT4X4 meshWorldMatrix; // mesh position/rotation/scale
+	uint32_t albedoIndexInHeap = 0;
+	uint32_t normalIndexInHeap = 0;
+	uint32_t roughnessIndexInHeap = 0;
+	uint32_t metallicIndexInHeap = 0;
+	bool bHaveAlbedoTex = false;
+	bool bHaveNormalTex = false;
+	bool bHaveRoughnessTex = false;
+	bool bHaveMetallicTex = false;
+};
+
 template <typename CBStructType>
 class ConstantBuffer
 {
@@ -62,6 +75,8 @@ public:
 			readRange.End = 0;
 			m_ConstantBuffer[id]->Map(0, &readRange, reinterpret_cast<void**>(&m_ConstantBufferMapPtr[id]));
 		}
+
+		s_CBsToFlipPtrs.push_back(std::bind(&ConstantBuffer::FlipCBIndex, this));
 	};
 
 	~ConstantBuffer() 
@@ -85,15 +100,30 @@ public:
 
 	__forceinline void FlipCBIndex()
 	{
+#if VEX_RENDER_BACK_BUFFER_COUNT == 2
 		m_currentCBIndex == 0 ? 1 : 0;
+#else
+		__debugbreak();
+#endif
 	};
+
+	static void FlipAllConstatnBuffersIndex()
+	{
+		for (auto& cbFlipFuncPtr : s_CBsToFlipPtrs)
+		{
+			if (cbFlipFuncPtr)
+				cbFlipFuncPtr();
+		}
+	}
 
 	__forceinline ID3D12Resource* GetCBResource() { return m_ConstantBuffer[m_currentCBIndex]; }
 	__forceinline CBStructType& CPUData() { return m_CBData; }
 private:
 	// D3D12
 	ID3D12Resource* m_ConstantBuffer[VEX_RENDER_BACK_BUFFER_COUNT]; // Constant Buffer
-	UINT8* m_ConstantBufferMapPtr[2]; // Mapped ptr for updating constant buffer, valid till resource destruction
+	UINT8* m_ConstantBufferMapPtr[VEX_RENDER_BACK_BUFFER_COUNT]; // Mapped ptr for updating constant buffer, valid till resource destruction
 	uint8_t m_currentCBIndex; // Current index of free resource, other may be still in use
 	CBStructType m_CBData; // Actual struct holding constant buffer data
+
+	inline static std::vector<std::function<void()>> s_CBsToFlipPtrs= {};
 };

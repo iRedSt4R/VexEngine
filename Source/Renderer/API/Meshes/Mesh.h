@@ -31,7 +31,7 @@ public:
 		m_CmdList = cmdList;
 		m_IndexedVertexBuffer = new DX12IndexedVertexBuffer(device);
 		m_AlbedoSRV = new Texture2D(device);
-		m_modelCB = new ConstantBuffer<CBSceneModel>(device);
+		m_meshCB = new ConstantBuffer<CBStaticMeshData>(device);
 	}
 	~SimpleMesh() {};
 
@@ -41,24 +41,24 @@ public:
 	void Deserialize(std::filesystem::path blobPath);
 
 private:
-	float* m_Vertices;
-	float* m_VerticesOnly;
-	int m_VertexCount;
-	uint32_t* m_Indicies;
-	int m_IndexCount;
-	int m_faceCount;
+	float* m_Vertices = nullptr;
+	float* m_VerticesOnly = nullptr;
+	int m_VertexCount = 0;
+	uint32_t* m_Indicies = nullptr;
+	int m_IndexCount = 0;
+	int m_faceCount = 0;
 	
 	// D3D12 
-	ID3D12Device* m_Device;
-	ID3D12GraphicsCommandList* m_CmdList;
-	DX12IndexedVertexBuffer* m_IndexedVertexBuffer;
+	ID3D12Device* m_Device = nullptr;
+	ID3D12GraphicsCommandList* m_CmdList = nullptr;
+	DX12IndexedVertexBuffer* m_IndexedVertexBuffer = nullptr;
 
-	Texture2D* m_AlbedoSRV;
-	ConstantBuffer<CBSceneModel>* m_modelCB = nullptr;
+	Texture2D* m_AlbedoSRV = nullptr;
 
 	// header used for serialization;
 	EngineMeshHeader m_meshHeader;
 	//ShaderResource* m_MetalnessSRV;
+	ConstantBuffer<CBStaticMeshData>* m_meshCB = nullptr;
 };
 
 class Mesh
@@ -66,7 +66,11 @@ class Mesh
 	friend class AccelerationStructure;
 
 public:
-	Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) { m_Device = device; m_CmdList = cmdList; }
+	Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) 
+	{ 
+		m_Device = device;
+		m_CmdList = cmdList; 
+	}
 	~Mesh() {};
 
 	void LoadMesh(std::string filePath, std::string meshFolder);
@@ -76,6 +80,6 @@ private:
 	std::vector<SimpleMesh*> m_Meshes;
 
 	// D3D12 
-	ID3D12Device* m_Device;
-	ID3D12GraphicsCommandList* m_CmdList;
+	ID3D12Device* m_Device = nullptr;
+	ID3D12GraphicsCommandList* m_CmdList = nullptr;
 };

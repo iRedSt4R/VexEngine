@@ -41,6 +41,11 @@ public:
 	__forceinline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV_CPU() { return m_RTV_CPU; }
 	__forceinline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_CPU() { return m_DSV_CPU; }
 
+	__forceinline uint32_t GetSRVIndexInsideHeap() { return m_SRVIndexInsideShaderVisibleHeap; }
+	__forceinline uint32_t GetUAVIndexInsideHeap() { return m_UAVIndexInsideShaderVisibleHeap; }
+	__forceinline uint32_t GetRTVIndexInsideHeap() { return m_RTVIndexInsideHeap; }
+	__forceinline uint32_t GetDSVIndexInsideHeap() { return m_DSVIndexInsideHeap; }
+
 	__forceinline ID3D12Resource* GetResource() { return m_resource; }
 private:
 

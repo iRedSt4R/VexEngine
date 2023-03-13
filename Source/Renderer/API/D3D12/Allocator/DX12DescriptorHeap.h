@@ -46,7 +46,7 @@ public:
 		m_device = device;
 
 		m_shaderVisibleDescHeap = new DX12DescriptorHeap(device, cmdList);
-		m_shaderVisibleDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1024, true);
+		m_shaderVisibleDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, VEX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE, true);
 
 		m_depthDescHeap = new DX12DescriptorHeap(device, cmdList);
 		m_depthDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 256, false);
@@ -67,6 +67,12 @@ public:
 		ID3D12DescriptorHeap* ppHeaps[] = { m_shaderVisibleDescHeap->GetDescriptorHeap() };
 		cmdList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	}
+
+	void SetBindlessTexture2DHeap(UINT rootIndex, ID3D12GraphicsCommandList* cmdList)
+	{
+		cmdList->SetGraphicsRootDescriptorTable(rootIndex, m_shaderVisibleDescHeap->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	};
+
 	ID3D12Resource* AllocateConstantBuffer(uint32_t CBSize);
 	DX12Resource* AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath);
 	DX12Resource* AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV);

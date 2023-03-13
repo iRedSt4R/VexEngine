@@ -48,6 +48,7 @@
 #include <thread>
 #include <chrono>
 #include <filesystem>
+#include <functional>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -66,6 +67,8 @@ using namespace DirectX;
 #define VEX_RENDER_INIT_SURFACE_WIDTH 800
 #define VEX_RENDER_INIT_SURFACE_HEIGHT 600
 #define VEX_RENDER_BACK_BUFFER_COUNT 2
+#define VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE 4096
+#define VEX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE (VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE + 4096)
 
 using namespace DirectX;
 

@@ -1,5 +1,6 @@
 #include "DX12Renderer.h"
 #include "Allocator\DX12DescriptorHeap.h"
+#include "DX12ConstantBuffer.h"
 
 DX12Renderer::DX12Renderer()
 {
@@ -71,6 +72,8 @@ void DX12Renderer::BeginFrame()
 
 void DX12Renderer::EndFrame()
 {
+	//ConstantBuffer::FlipAllConstatnBuffersIndex();
+
 	auto backBuffer = m_swapChain->GetCurrentBackBufferRenderTarget();
 
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

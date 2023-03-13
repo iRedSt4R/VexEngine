@@ -1,5 +1,7 @@
 #include "DX12Device.h"
 #include <dxgi1_6.h>
+#include <atlbase.h>
+using namespace ATL;
 
 DX12Device::DX12Device()
 {
@@ -19,6 +21,14 @@ void DX12Device::Create()
 	ID3D12Debug* debugInterface;
 	D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
 	debugInterface->EnableDebugLayer();
+
+#if 0
+	CComPtr<ID3D12Debug> spDebugController0;
+	CComPtr<ID3D12Debug1> spDebugController1;
+	D3D12GetDebugInterface(IID_PPV_ARGS(&spDebugController0));
+	spDebugController0->QueryInterface(IID_PPV_ARGS(&spDebugController1));
+	spDebugController1->SetEnableGPUBasedValidation(true);
+#endif
 #endif
 
 	// Factory

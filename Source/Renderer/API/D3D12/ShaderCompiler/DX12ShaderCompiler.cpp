@@ -29,7 +29,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompileVertexShader(std::filesystem::p
 		sourceBlob,
 		vsPath.c_str(),
 		L"vs_main", // pEntryPoint
-		L"vs_6_6", // pTargetProfile
+		L"vs_6_1", // pTargetProfile
 		arguments.data(), arguments.size(),
 		NULL, 0,
 		NULL,
@@ -77,7 +77,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompilePixelShader(std::filesystem::pa
 		sourceBlob,
 		psPath.c_str(),
 		L"ps_main", // pEntryPoint
-		L"ps_6_6", // pTargetProfile
+		L"ps_6_1", // pTargetProfile
 		arguments.data(), arguments.size(),
 		NULL, 0,
 		NULL,

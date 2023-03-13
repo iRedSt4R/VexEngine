@@ -1,4 +1,5 @@
 #include "RenderPasses.h"
+#include "../Light/LightManager.h"
 
 static bool bInit = false;
 
@@ -115,7 +116,7 @@ void RenderPassShadowMap::RunPass(uint8_t contextID)
 	}
 
 	// todo: move flipping cb index to the end of the frame (it should be called one time after all the drawing)
-	m_shadowCameraCB->FlipCBIndex();
+	//m_shadowCameraCB->FlipCBIndex();
 }
 
 void RenderPassShadowMap::EndPass(uint8_t contextID)

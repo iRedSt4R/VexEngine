@@ -21,6 +21,8 @@ public:
 		cmdList->SetGraphicsRootDescriptorTable(rootParamIndex, m_textureResource->GetSRV());
 	}
 
+	__forceinline DX12Resource* GetDX12Resource() { return m_textureResource; }
+
 private:
 	ID3D12Device* m_device;
 
