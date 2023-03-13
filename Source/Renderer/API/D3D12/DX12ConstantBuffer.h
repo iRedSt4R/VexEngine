@@ -48,14 +48,37 @@ struct CBStaticMeshData
 	uint32_t normalIndexInHeap = 0;
 	uint32_t roughnessIndexInHeap = 0;
 	uint32_t metallicIndexInHeap = 0;
-	bool bHaveAlbedoTex = false;
-	bool bHaveNormalTex = false;
-	bool bHaveRoughnessTex = false;
-	bool bHaveMetallicTex = false;
+	uint32_t bHaveAlbedoTex = false;
+	uint32_t bHaveNormalTex = false;
+	uint32_t bHaveRoughnessTex = false;
+	uint32_t bHaveMetallicTex = false;
+};
+
+class ConstantBufferBase
+{
+public:
+	virtual void FlipCBIndex() = 0;
+};
+
+
+class ConstantBufferFlipper
+{
+public:
+	static void AddConstantBufferToFlip(ConstantBufferBase* cbToFlip) { s_buffersToFlip.push_back(cbToFlip); }
+
+	static void FlipAllConstantBuffers()
+	{
+		for (auto& buffer : s_buffersToFlip)
+		{
+			buffer->FlipCBIndex();
+		}
+	}
+private:
+	inline static std::vector<ConstantBufferBase*> s_buffersToFlip = {};
 };
 
 template <typename CBStructType>
-class ConstantBuffer
+class ConstantBuffer : public ConstantBufferBase
 {
 public:
 	// Creates constant buffer with already allocated descriptor heap for it
@@ -76,7 +99,7 @@ public:
 			m_ConstantBuffer[id]->Map(0, &readRange, reinterpret_cast<void**>(&m_ConstantBufferMapPtr[id]));
 		}
 
-		s_CBsToFlipPtrs.push_back(std::bind(&ConstantBuffer::FlipCBIndex, this));
+		ConstantBufferFlipper::AddConstantBufferToFlip(this);
 	};
 
 	~ConstantBuffer() 
@@ -98,23 +121,14 @@ public:
 		cmdList->SetComputeRootConstantBufferView(rootParamIndex, m_ConstantBuffer[m_currentCBIndex]->GetGPUVirtualAddress());
 	}
 
-	__forceinline void FlipCBIndex()
+	__forceinline virtual void FlipCBIndex() override final
 	{
 #if VEX_RENDER_BACK_BUFFER_COUNT == 2
-		m_currentCBIndex == 0 ? 1 : 0;
+		m_currentCBIndex = (m_currentCBIndex == 0 ? 1 : 0);
 #else
 		__debugbreak();
 #endif
 	};
-
-	static void FlipAllConstatnBuffersIndex()
-	{
-		for (auto& cbFlipFuncPtr : s_CBsToFlipPtrs)
-		{
-			if (cbFlipFuncPtr)
-				cbFlipFuncPtr();
-		}
-	}
 
 	__forceinline ID3D12Resource* GetCBResource() { return m_ConstantBuffer[m_currentCBIndex]; }
 	__forceinline CBStructType& CPUData() { return m_CBData; }
@@ -124,6 +138,4 @@ private:
 	UINT8* m_ConstantBufferMapPtr[VEX_RENDER_BACK_BUFFER_COUNT]; // Mapped ptr for updating constant buffer, valid till resource destruction
 	uint8_t m_currentCBIndex; // Current index of free resource, other may be still in use
 	CBStructType m_CBData; // Actual struct holding constant buffer data
-
-	inline static std::vector<std::function<void()>> s_CBsToFlipPtrs= {};
 };

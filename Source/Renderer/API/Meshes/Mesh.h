@@ -30,7 +30,9 @@ public:
 		m_Device = device; 
 		m_CmdList = cmdList;
 		m_IndexedVertexBuffer = new DX12IndexedVertexBuffer(device);
-		m_AlbedoSRV = new Texture2D(device);
+		m_albedoSRV = new Texture2D(device);
+		m_normalSRV = new Texture2D(device);
+		m_roughnessMetallicSRV = new Texture2D(device);
 		m_meshCB = new ConstantBuffer<CBStaticMeshData>(device);
 	}
 	~SimpleMesh() {};
@@ -53,7 +55,9 @@ private:
 	ID3D12GraphicsCommandList* m_CmdList = nullptr;
 	DX12IndexedVertexBuffer* m_IndexedVertexBuffer = nullptr;
 
-	Texture2D* m_AlbedoSRV = nullptr;
+	Texture2D* m_albedoSRV = nullptr;
+	Texture2D* m_normalSRV = nullptr;
+	Texture2D* m_roughnessMetallicSRV = nullptr;
 
 	// header used for serialization;
 	EngineMeshHeader m_meshHeader;

@@ -151,6 +151,10 @@ void Win64App::Init(HINSTANCE hInstance, int windowWidth, int windowHeight)
 	Rid[0].dwFlags = RIDEV_INPUTSINK;
 	Rid[0].hwndTarget = m_WindowHandle;
 	bool h = RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+
+	RECT r;
+	::GetWindowRect(m_WindowHandle, &r);
+	ClipCursor(&r);
 }
 
 void Win64App::AddLoopCallbacks(std::function<void()> beginCallback, std::function<void()> updateCallback, std::function<void()> endCallback)

@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-#define SCALE 0.005f
+#define SCALE 0.5f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -77,9 +77,38 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 		std::string texturePath(path.data);
 		std::string pathCombined(assetTexturePath + texturePath);
 		errorPath = pathCombined;
-		m_AlbedoSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+		m_albedoSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+
+		// set cb data as well for this texture
+		m_meshCB->CPUData().albedoIndexInHeap = m_albedoSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
+		m_meshCB->CPUData().bHaveAlbedoTex = true;
 	}
 
+	// normal map
+	if (meshMaterial->GetTexture(aiTextureType_NORMALS, texIndex, &path) == AI_SUCCESS)
+	{
+		std::string texturePath(path.data);
+		std::string pathCombined(assetTexturePath + texturePath);
+		errorPath = pathCombined;
+		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+
+		m_meshCB->CPUData().normalIndexInHeap = m_normalSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
+		m_meshCB->CPUData().bHaveNormalTex = true;
+	}
+
+	// roughness and metallic combined
+	if (meshMaterial->GetTexture(aiTextureType_LIGHTMAP, texIndex, &path) == AI_SUCCESS)
+	{
+		std::string texturePath(path.data);
+		std::string pathCombined(assetTexturePath + texturePath);
+		errorPath = pathCombined;
+		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+
+		m_meshCB->CPUData().roughnessIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
+		m_meshCB->CPUData().metallicIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
+		m_meshCB->CPUData().bHaveRoughnessTex = true;
+		m_meshCB->CPUData().bHaveMetallicTex = true;
+	}
 	m_IndexedVertexBuffer->Create(m_CmdList, m_VertexCount * 4 * VERTEX_ATTRIBUTE_COUNT, VERTEX_ATTRIBUTE_COUNT * 4, m_IndexCount, m_Vertices, m_Indicies);
 
 	m_meshHeader.textureContentType = 0;
@@ -101,16 +130,12 @@ void SimpleMesh::Deserialize(std::filesystem::path blobPath)
 
 void SimpleMesh::DrawMesh(bool bShadow)
 {
-	m_meshCB->CPUData().bHaveAlbedoTex = true;
-	m_meshCB->CPUData().albedoIndexInHeap = m_AlbedoSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 	m_meshCB->SendConstantDataToGPU();
 
 	m_IndexedVertexBuffer->Set(m_CmdList);
 	if (!bShadow)
 	{
 		m_meshCB->SetAsInlineRootDescriptor(m_CmdList, 1);
-		//m_AlbedoSRV->SetAsGraphicsRootDescriptorTable(m_CmdList, 3);
-		//m_modelCB->FlipCBIndex();
 	}
 	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 }

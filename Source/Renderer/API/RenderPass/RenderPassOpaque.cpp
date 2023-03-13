@@ -176,6 +176,7 @@ void RenderPassStaticOpaque::BeginPass(uint8_t contextID)
 	cmdList->SetPipelineState(m_PipelineStateObject);
 	cmdList->SetGraphicsRootSignature(m_RootSignature);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_shadowDepth->ChangeState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, cmdList);
 
 	DX12ResoruceAllocator::Get()->SetBindlessTexture2DHeap(3, cmdList);
 }

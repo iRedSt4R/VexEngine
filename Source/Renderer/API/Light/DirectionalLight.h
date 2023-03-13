@@ -6,6 +6,7 @@
 
 class DirectionalLight
 {
+public:
 	struct CBData
 	{
 		XMFLOAT4X4 dirLightViewMatrix;

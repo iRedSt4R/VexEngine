@@ -36,24 +36,38 @@ cbuffer MeshDataCB : register(b1)
 	uint normalIndexInHeap;
 	uint roughnessIndexInHeap;
 	uint metallicIndexInHeap;
-	bool bHaveAlbedoTex;
-	bool bHaveNormalTex;
-	bool bHaveRoughnessTex;
-	bool bHaveMetallicTex;
+	uint bHaveAlbedoTex;
+	uint bHaveNormalTex;
+	uint bHaveRoughnessTex;
+	uint bHaveMetallicTex;
 }
 
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
+    float3 finalColor = 0.f;
     float4 texColor = TexAlbedo[albedoIndexInHeap].Sample(BasicSampler, input.texCoord);
 
     if(texColor.a < 0.8f)
         discard;
 
-    float3 finalColor = 0.f;
-
     finalColor = texColor.xyz * float3(0.01f, 0.01f, 0.01f);
     
+    // calculate new normal from normal map if exists
+    if(0)
+    {
+        float3 BumpMapNormal = TexAlbedo[normalIndexInHeap].Sample(BasicSampler, input.texCoord);
+        BumpMapNormal = (2.0f*BumpMapNormal) - 1.0f;
 
+        //Make sure tangent is completely orthogonal to normal
+        input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
+
+        //Create the "Texture Space"
+        float3x3 texSpace = float3x3(input.tangent, input.bitangent, input.normal);
+
+        //Convert normal from normal map to texture space and store in input.normal
+        input.normal = normalize(mul(BumpMapNormal, texSpace));
+        //return float4(float3(0.7f, 0.2f, 0.4f), 1.f);
+    }
 
     // shadow calc
     float2 projectTexCoord;
@@ -69,7 +83,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
         return float4(finalColor, 1.f);
     }
 
-    finalColor += saturate(dot(lightDir, input.normal) * lightColor * 2.f * texColor.xyz);
+    finalColor += saturate(dot(lightDir, input.normal) * lightColor * 1.f * texColor.xyz);
 
     //return float4(float3(0.7f, 0.2f, 0.4f), 1.f);
     return float4(finalColor, 1.f);

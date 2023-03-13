@@ -90,6 +90,8 @@ void RenderPassShadowMap::BeginPass(uint8_t contextID)
 	cmdList->RSSetScissorRects(1, &rect);
 
 	auto depthView = m_shadowDepth->GetDSV_CPU();
+	m_shadowDepth->ChangeState(D3D12_RESOURCE_STATE_DEPTH_WRITE, cmdList);
+
 	m_shadowCamera->InitWithDirectionalLight(m_lightManager->GetDirectionalLight(), 25.f * 1.77777777778f, 25.f, 0.1f, 100.f);
 
 	cmdList->ClearDepthStencilView(depthView, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
@@ -109,6 +111,7 @@ void RenderPassShadowMap::RunPass(uint8_t contextID)
 	m_shadowCameraCB->CPUData().viewProjectionMatrix = m_shadowCamera->GetShadowViewProjection();
 	m_shadowCameraCB->SendConstantDataToGPU();
 	m_shadowCameraCB->SetAsInlineRootDescriptor(cmdList, 0);
+	
 
 	for (auto& mehes : m_meshes)
 	{

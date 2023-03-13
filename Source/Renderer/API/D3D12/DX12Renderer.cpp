@@ -73,6 +73,7 @@ void DX12Renderer::BeginFrame()
 void DX12Renderer::EndFrame()
 {
 	//ConstantBuffer::FlipAllConstatnBuffersIndex();
+	ConstantBufferFlipper::FlipAllConstantBuffers();
 
 	auto backBuffer = m_swapChain->GetCurrentBackBufferRenderTarget();
 
@@ -107,7 +108,7 @@ void DX12Renderer::PreDraw(uint8_t contextID)
 
 void DX12Renderer::EndDraw(uint8_t contextID)
 {
-
+	
 }
 
 void DX12Renderer::BindSwapchainToRTV()

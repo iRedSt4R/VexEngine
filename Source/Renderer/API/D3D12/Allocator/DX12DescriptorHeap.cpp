@@ -210,22 +210,22 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
 	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	m_device->CreateCommittedResource(
 		&heapType,
 		D3D12_HEAP_FLAG_NONE, // todo: change flag to more optimized
 		&depthDesc,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		nullptr,
+		&clearValue,
 		IID_PPV_ARGS(&res));
 
 	returnResource->SetCurrentState(D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	returnResource->AddResource(res);
-
-	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	clearValue.DepthStencil.Depth = 1.0f;
-	clearValue.DepthStencil.Stencil = 0;
 
 	// DSV:
 	DX12DescriptorMemory descMemory = m_depthDescHeap->GetFreeDescriptorMemory();
@@ -235,6 +235,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 	depthView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	depthView.Flags = D3D12_DSV_FLAG_NONE;
 	depthView.Texture2D.MipSlice = 0;
+
 	m_device->CreateDepthStencilView(res, &depthView, descMemory.m_CpuDescriptorMemory);
 	returnResource->AddDSV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
 

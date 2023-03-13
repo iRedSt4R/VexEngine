@@ -1,7 +1,5 @@
 #include "DX12Device.h"
 #include <dxgi1_6.h>
-#include <atlbase.h>
-using namespace ATL;
 
 DX12Device::DX12Device()
 {
