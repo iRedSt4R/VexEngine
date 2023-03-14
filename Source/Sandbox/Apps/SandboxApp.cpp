@@ -20,12 +20,12 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 
 	// sponza mesh
 	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
-	m_mesh->LoadMesh("scene1/scene.gltf", "scene1/");
+	m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
 
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(-0.95f, 0.95f, -0.2f), XMFLOAT3(0.9f, 0.9f, 0.9f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(0.9f, 0.9f, 0.9f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
 
 	// shadow framebuffer

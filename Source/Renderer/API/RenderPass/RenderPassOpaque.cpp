@@ -187,6 +187,7 @@ void RenderPassStaticOpaque::RunPass(uint8_t contextID)
 
 	m_cameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
 	m_cameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
+	m_cameraCB->CPUData().worldCameraPosition = m_camera->GetCameraPosition();
 	m_cameraCB->SendConstantDataToGPU();
 
 	m_cameraCB->SetAsInlineRootDescriptor(cmdList, 0);

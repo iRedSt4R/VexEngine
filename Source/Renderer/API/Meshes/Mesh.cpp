@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-#define SCALE 0.5f
+#define SCALE 0.005f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -95,9 +95,9 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 		m_meshCB->CPUData().normalIndexInHeap = m_normalSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().bHaveNormalTex = true;
 	}
-
+	aiString fileMetallic;
 	// roughness and metallic combined
-	if (meshMaterial->GetTexture(aiTextureType_LIGHTMAP, texIndex, &path) == AI_SUCCESS)
+	if (meshMaterial->GetTexture(aiTextureType_UNKNOWN, texIndex, &path) == AI_SUCCESS)
 	{
 		std::string texturePath(path.data);
 		std::string pathCombined(assetTexturePath + texturePath);
