@@ -54,6 +54,12 @@ struct CBStaticMeshData
 	uint32_t bHaveMetallicTex = false;
 };
 
+struct CBCubeMapData
+{
+	XMFLOAT4X4 WorldViewProjection;
+	uint32_t textureCubeIndex = 0;
+};
+
 class ConstantBufferBase
 {
 public:

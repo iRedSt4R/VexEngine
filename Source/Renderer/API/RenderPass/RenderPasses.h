@@ -10,6 +10,7 @@
 #include "../Textures/2DTexture.h"
 #include "../Meshes/Mesh.h"
 #include "../Light/LightManager.h"
+#include "../Meshes/Skybox.h"
 
 //Passes:
 // basic opaque pass for static geometry
@@ -85,4 +86,30 @@ private:
 
 	// light data for shadows
 	LightManager* m_lightManager = nullptr;
+};
+
+// RenderPass for rendering cubemap (non-hdr)
+class RenderPassCubeMapDraw : public RenderPassBase
+{
+public:
+	void Create(DX12Renderer* renderer) override final;
+	void BeginPass(uint8_t contextID) override final;
+	void RunPass(uint8_t contextID) override final;
+	void EndPass(uint8_t contextID) override final;
+
+	void AddCamera(FPSCamera* camera) { m_camera = camera; }
+
+private:
+	// Root signature and PSO unique to this pass
+	ID3D12RootSignature* m_RootSignature;
+	ID3D12PipelineState* m_PipelineStateObject;
+
+	// Shaders
+	D3D12_SHADER_BYTECODE m_vsShader;
+	D3D12_SHADER_BYTECODE m_psShader;
+
+	Skybox* m_skybox = nullptr;
+	FPSCamera* m_camera = nullptr;
+	
+
 };

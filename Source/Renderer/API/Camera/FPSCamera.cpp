@@ -3,7 +3,7 @@
 FPSCamera::FPSCamera(uint32_t width, uint32_t height)
 {
 	// build projection
-	XMMATRIX tmpMat = XMMatrixPerspectiveFovLH(60.0f * (3.14f / 180.0f), (float)width / (float)height, 0.1f, 1000.0f);
+	XMMATRIX tmpMat = XMMatrixPerspectiveFovLH(60.0f * (3.14f / 180.0f), (float)width / (float)height, 0.01f, 1000.0f);
 	tmpMat = XMMatrixTranspose(tmpMat);
 	XMStoreFloat4x4(&m_ProjectionMatrix, tmpMat);
 

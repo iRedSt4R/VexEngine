@@ -1,4 +1,4 @@
-Texture2D TexAlbedo[] : register(t0); // bindless Texture2D access from shader visible heap
+TextureCube  TexAlbedo[] : register(t0); // bindless Texture2D access from shader visible heap
 SamplerState BasicSampler : register(s0);
 SamplerState ShadowSampler : register(s1);
 

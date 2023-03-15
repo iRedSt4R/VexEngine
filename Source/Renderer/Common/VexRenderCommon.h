@@ -59,7 +59,7 @@ using namespace DirectX;
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
-#define VEX_RENDER_USE_VALIDATOR 0
+#define VEX_RENDER_USE_VALIDATOR 1
 #define VEX_RENDER_USE_DEBUG_DEVICE 1
 
 #define VEX_RENDER_INIT_WINDOW_WIDTH 800
@@ -71,6 +71,11 @@ using namespace DirectX;
 #define VEX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE (VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE + 4096)
 
 using namespace DirectX;
+
+struct Vertex
+{
+	XMFLOAT3 Position;
+};
 
 //Vertex with position(3 floats) and color(4 floats)
 struct VertexP3C4 {

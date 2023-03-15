@@ -258,3 +258,93 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 
 	return returnResource;
 }
+
+DX12Resource* DX12ResoruceAllocator::AllocateTextureCubeFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB /*= true*/)
+{
+	std::filesystem::path pp(filePath);
+
+	DX12Resource* returnResource = new DX12Resource();
+	ID3D12Resource* shaderResource;
+
+	DirectX::TexMetadata metadata;
+	DirectX::ScratchImage scratchImage;
+
+	// Load cubemap dds from file
+	HRESULT hr = DirectX::LoadFromDDSFile(filePath.c_str(), DDS_FLAGS_NONE, &metadata, scratchImage);
+
+	// Fill the resource desc
+	D3D12_RESOURCE_DESC textureDesc{};
+	textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+		metadata.format,
+		static_cast<UINT64>(metadata.width),
+		static_cast<UINT>(metadata.height),
+		static_cast<UINT16>(metadata.arraySize),
+		static_cast<UINT16>(metadata.mipLevels)
+	);
+
+	// Creating committed resource from desc
+	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	hr = m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&shaderResource));
+
+	// subresource info for copying
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources(scratchImage.GetImageCount());
+	const Image* pImagess = scratchImage.GetImages();
+
+	for (int i = 0; i < subresources.size(); ++i) {
+
+		auto& subresource = subresources[i];
+		subresource.RowPitch = pImagess[i].rowPitch;
+		subresource.SlicePitch = pImagess[i].slicePitch;
+		subresource.pData = pImagess[i].pixels;
+	}
+
+	UINT64 requiredSize = GetRequiredIntermediateSize(shaderResource, 0, subresources.size());
+
+	ID3D12Resource* intermediateResource;
+	heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto bufferType = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
+	hr = m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferType,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&intermediateResource)
+	);
+
+	if (hr != S_OK)
+	{
+		__debugbreak();
+	}
+
+	// Update data through upload heap
+	UpdateSubresources(cmdList, shaderResource, intermediateResource, 0, 0, subresources.size(), subresources.data());
+
+	// Change resource state from copy_dest to pixel_shader_resource
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(shaderResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	cmdList->ResourceBarrier(1, &barrier);
+
+	// Create SRV from resource
+	DX12DescriptorMemory descMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Texture2D.MipLevels = metadata.mipLevels;
+	m_device->CreateShaderResourceView(shaderResource, &srvDesc, descMemory.m_CpuDescriptorMemory);
+	m_srvNumber++;
+
+	// create final DX12Resource
+	returnResource->AddResource(shaderResource);
+	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
+
+	// return SRV
+	return returnResource;
+}
