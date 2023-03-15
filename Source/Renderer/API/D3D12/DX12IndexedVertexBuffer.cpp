@@ -63,44 +63,47 @@ void DX12IndexedVertexBuffer::Create(ID3D12GraphicsCommandList* cmdList, int ver
 	cmdList->ResourceBarrier(1, &barrierToExe);
 
 	// ------------------------------------------------------------------- INDEX BUFFER ------------------------------------------------------------------- //
-
-	// Copy index data from CPU to GPU index buffer through upload heap
-	// Create Default Heap
-	auto indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexCount * sizeof(uint32_t));
-	m_Device->CreateCommittedResource(
-		&heapPropertiesDefault,
-		D3D12_HEAP_FLAG_NONE,
-		&indexBufferDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&m_IndexBuffer));
-
-	m_IndexBuffer->SetName(L"Index Buffer Resource Heap");
-
-	// Create Upload Heap
-	auto indexUploadDesc = CD3DX12_RESOURCE_DESC::Buffer(indexCount * sizeof(uint32_t));
-	ID3D12Resource* vBufferUploadHeap2;
-	m_Device->CreateCommittedResource(
-		&heapPropertiesUpload,
-		D3D12_HEAP_FLAG_NONE,
-		&indexUploadDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&vBufferUploadHeap2));
-	vBufferUploadHeap2->SetName(L"Index Buffer Upload Resource Heap");
-
-	// Upload Heap -> Default Heap
-	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = reinterpret_cast<BYTE*>(ibData);
-	indexData.RowPitch = indexCount * sizeof(uint32_t);
-	indexData.SlicePitch = indexCount * sizeof(uint32_t);
-
-	m_IndexBufferView.BufferLocation = m_IndexBuffer->GetGPUVirtualAddress();
-	m_IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_IndexBufferView.SizeInBytes = indexCount * sizeof(uint32_t);
-
-	UpdateSubresources(cmdList, m_IndexBuffer, vBufferUploadHeap2, 0, 0, 1, &indexData);
-
-	barrierToExe = CD3DX12_RESOURCE_BARRIER::Transition(m_IndexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	cmdList->ResourceBarrier(1, &barrierToExe);
+	if (indexCount > 0)
+	{
+		m_bVertexBufferOnly = false;
+		// Copy index data from CPU to GPU index buffer through upload heap
+		// Create Default Heap
+		auto indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexCount * sizeof(uint32_t));
+		m_Device->CreateCommittedResource(
+			&heapPropertiesDefault,
+			D3D12_HEAP_FLAG_NONE,
+			&indexBufferDesc,
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&m_IndexBuffer));
+	
+		m_IndexBuffer->SetName(L"Index Buffer Resource Heap");
+	
+		// Create Upload Heap
+		auto indexUploadDesc = CD3DX12_RESOURCE_DESC::Buffer(indexCount * sizeof(uint32_t));
+		ID3D12Resource* vBufferUploadHeap2;
+		m_Device->CreateCommittedResource(
+			&heapPropertiesUpload,
+			D3D12_HEAP_FLAG_NONE,
+			&indexUploadDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&vBufferUploadHeap2));
+		vBufferUploadHeap2->SetName(L"Index Buffer Upload Resource Heap");
+	
+		// Upload Heap -> Default Heap
+		D3D12_SUBRESOURCE_DATA indexData = {};
+		indexData.pData = reinterpret_cast<BYTE*>(ibData);
+		indexData.RowPitch = indexCount * sizeof(uint32_t);
+		indexData.SlicePitch = indexCount * sizeof(uint32_t);
+	
+		m_IndexBufferView.BufferLocation = m_IndexBuffer->GetGPUVirtualAddress();
+		m_IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		m_IndexBufferView.SizeInBytes = indexCount * sizeof(uint32_t);
+	
+		UpdateSubresources(cmdList, m_IndexBuffer, vBufferUploadHeap2, 0, 0, 1, &indexData);
+	
+		barrierToExe = CD3DX12_RESOURCE_BARRIER::Transition(m_IndexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		cmdList->ResourceBarrier(1, &barrierToExe);
+	}
 }

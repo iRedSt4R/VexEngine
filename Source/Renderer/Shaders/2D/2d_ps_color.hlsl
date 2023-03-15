@@ -5,44 +5,6 @@ SamplerState ShadowSampler : register(s1);
 #define M_PI 3.14159265359f
 #define PI 3.14159265359f
 
-float3 fresnelSchlick(float cosTheta, float3 F0)
-{
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}  
-
-float DistributionGGX(float3 N, float3 H, float roughness)
-{
-    float a      = roughness*roughness;
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-	
-    float num   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-	
-    return num / denom;
-}
-
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
-
-    float num   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-	
-    return num / denom;
-}
-float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
-	
-    return ggx1 * ggx2;
-}
 
 struct VS_OUTPUT
 {
@@ -85,11 +47,115 @@ cbuffer MeshDataCB : register(b1)
 	uint bHaveMetallicTex;
 }
 
+float FresnelSchlick(float f0, float fd90, float view)
+{
+	return f0 + (fd90 - f0) * pow(max(1.0f - view, 0.1f), 5.0f);
+}
+
+float chiGGX(float v)
+{
+	return v > 0 ? 1 : 0;
+}
+
+float GGX_Distribution(float3 n, float3 h, float alpha)
+{
+	float NoH = dot(n, h);
+	float alpha2 = alpha * alpha;
+	float NoH2 = NoH * NoH;
+	float den = NoH2 * alpha2 + (1 - NoH2);
+	return (chiGGX(NoH) * alpha2) / (PI * den * den);
+}
+ 
+float Disney(float3 N, float3 V, float3 L, float roughness)
+{
+	float3 halfVector = normalize(L + V);
+
+	float NdotL = saturate(dot(N, L));
+	float LdotH = saturate(dot(L, halfVector));
+	float NdotV = saturate(dot(N, V));
+
+	float energyBias = lerp(0.0f, 0.5f, roughness);
+	float energyFactor = lerp(1.0f, 1.0f / 1.51f, roughness);
+	float fd90 = energyBias + 2.0f * (LdotH * LdotH) * roughness;
+	float f0 = 1.0f;
+
+	float lightScatter = FresnelSchlick(f0, fd90, NdotL).r;
+	float viewScatter = FresnelSchlick(f0, fd90, NdotV).r;
+
+	return lightScatter * viewScatter * energyFactor;
+}
+
+float3 GGX(float3 N, float3 V, float3 L, float roughness, float3 specular)
+{
+	float3 h = normalize(L + V);
+	float NdotH = saturate(dot(N, h));
+
+	float rough2 = max(roughness * roughness, 2.0e-3f); // capped so spec highlights don't disappear
+	float rough4 = rough2 * rough2;
+
+	float d = (NdotH * rough4 - NdotH) * NdotH + 1.0f;
+	float D = rough4 / (3.1415926535897932384626433832795f * (d * d)); //PI TO BE ADDED!!!!
+
+	// Fresnel
+	float3 reflectivity = specular;
+	float fresnel = 1;
+	float NdotL = saturate(dot(N, L));
+	float LdotH = saturate(dot(L, h));
+	float NdotV = saturate(dot(N, V));
+	float3 F = reflectivity + (fresnel - fresnel * reflectivity) * exp2((-5.55473f * LdotH - 6.98316f) * LdotH);
+
+	// geometric / visibility
+	float k = rough2 * 0.5f;
+	float G_SmithL = NdotL * (1.0f - k) + k;
+	float G_SmithV = NdotV * (1.0f - k) + k;
+	float G = 0.25f / (G_SmithL * G_SmithV);
+
+	return G * D * F;
+}
+
+
+float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float pRoughness)
+{
+	float3 base_color = cAlbedo;
+	float metallic = pMetallic;
+	float roughness = pRoughness;
+
+	float3  H = normalize(L + V);
+	float dot_n_l = dot(N, L);
+	float dot_l_h = dot(L, H);
+	float dot_n_h = dot(N, H);
+	float dot_n_v = dot(N, V);
+
+	float alpha = roughness * roughness;
+
+	float3 diffuse_color = base_color * (1 - metallic);
+	float3 diffuse_brdf = diffuse_color;
+	diffuse_brdf *= saturate(dot_n_l * Disney(N, V, L, alpha));
+
+	//Reflections
+	float3 reflectionVector = normalize(reflect(-V, N));
+	float smoothness = 1 - roughness;
+	float mipLevel = (1.0f - smoothness * smoothness);
+	float4 cs = float4(0.f, 0.0f, 0.0f, 1.f);
+	cs = cs * dot_n_l;
+
+	diffuse_brdf = saturate(lerp(diffuse_brdf, cs.rgb, metallic));
+	diffuse_brdf = base_color.rgb * diffuse_brdf;
+
+
+	
+	float specPow = pow((1 - roughness), 4);
+	float3 specular_brdf = GGX(N, V, L, roughness, float3(specPow, specPow, specPow));
+
+	float3 final_brdf = (diffuse_brdf + specular_brdf);
+	return final_brdf;
+	}
+
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
     float3 finalColor = 0.f;
     float4 texColor = TexAlbedo[albedoIndexInHeap].Sample(BasicSampler, input.texCoord);
-   
+    //float3 baseColor = texColor.xyz * float3(0.03f, 0.03f, 0.03f);
 
     if(texColor.a < 0.8f)
         discard;
@@ -97,20 +163,23 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     //finalColor = texColor.xyz * float3(0.03f, 0.03f, 0.03f);
     
     // calculate new normal from normal map if exists
-    if(bHaveNormalTex == 1)
+    if(0)
     {
-        float3 Normal = normalize(input.normal);
-        float3 Tangent = normalize(input.tangent);
-        Tangent = normalize(Tangent - dot(Tangent, input.texCoord) * Normal);
-        float3 Binormal = cross(Tangent, Normal);
-        float3 BumpMapNormal = TexAlbedo[normalIndexInHeap].Sample(BasicSampler, input.texCoord);
-        BumpMapNormal = pow(BumpMapNormal, 1/2.2f);
-        BumpMapNormal = (2.0f * BumpMapNormal) - 1.0f;
-        float3 NewNormal;
-        float3x3 TBN = float3x3(Tangent, Binormal, Normal);
-        NewNormal = mul(BumpMapNormal, TBN);
-        NewNormal = normalize(NewNormal);
-        input.normal = NewNormal;
+        float4 normalMap = TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord );
+        //normalMap = pow(normalMap, 1/2.2f);
+        normalMap = (2.0f*normalMap) - 1.0f;
+
+        //Make sure tangent is completely orthogonal to normal
+        input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
+
+        //Create the biTangent
+        float3 biTangent = cross(input.normal, input.tangent);
+
+        //Create the "Texture Space"
+        float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
+
+        //Convert normal from normal map to texture space and store in input.normal
+        input.normal = normalize(mul(normalMap, texSpace));
     }
 
     // shadow calc
@@ -125,52 +194,19 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     //if(depthValue < lightDepthValue)
     //{
         //return float4(finalColor, 1.f);
-   // }
-    //finalColor += saturate(dot(lightDir, input.normal) * lightColor * texColor.xyz);
-    //float roughness = TexAlbedo[roughnessIndexInHeap].Sample(BasicSampler, input.texCoord).g;
-    //roughness = pow(roughness, 1/2.2f);
-    //float metallic = TexAlbedo[roughnessIndexInHeap].Sample(BasicSampler, input.texCoord).r;
-    //roughness = pow(roughness, 1/2.2f);
-    float metallic = 0.0f;
-    float roughness = 0.2f;
+    //}
+
     // BRDF ---------------------------------------------------------------------------------
+    float roughness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).g;
+    roughness = pow(roughness, 1/2.8f);
+    float metalness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).r;
+    metalness = pow(metalness, 1/2.8f);
+    float3 L = lightDir;
+    float3 V = normalize(worldCameraPosition - input.pos.rgb);
     float3 N = normalize(input.normal);
-    float3 V = normalize(worldCameraPosition - input.pos);
-
-    float3 F0 = float3(0.04f, 0.04f, 0.04f); 
-    F0 = lerp(F0, texColor.xyz, metallic);
-	           
-    // reflectance equation
-    float3 Lo = float3(0.0f, 0.0f, 0.0f);
-    // calculate per-light radiance
-    float3 L = normalize(-lightDir);
-    float3 H = normalize(V + L);
-    float3 radiance  = lightColor;        
-    
-    // cook-torrance brdf
-    float NDF = DistributionGGX(N, H, roughness);        
-    float G   = GeometrySmith(N, V, L, roughness);      
-    float3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
-    
-    float3 kS = F;
-    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    kD *= 1.0 - metallic;	  
-    
-    float3 numerator    = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    float3 specular     = numerator / denominator;  
-        
-    // add to outgoing radiance Lo
-    float NdotL = max(dot(N, L), 0.0);                
-    Lo += (kD * texColor.xyz / PI + specular) * radiance * NdotL;  
-  
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * texColor.xyz; //  * ao (from ao map if exists)
-    float3 color = ambient + Lo;
-	
-    color = color / (color + float3(1.0f, 1.0f, 1.0f));
-    //color = pow(color, 1.0/2.2);  
-   
+    finalColor = BRDF(L, V, N, texColor.rgb, metalness, roughness);
     // BRDF ---------------------------------------------------------------------------------
 
-    return float4(color, 1.f);
+    //return float4(TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).rgb, 1.f);
+    return float4(finalColor, 1.f);
 }

@@ -69,7 +69,7 @@ ID3D12Resource* DX12ResoruceAllocator::AllocateConstantBuffer(uint32_t CBSize)
 	return returnConstantBuffer;
 }
 
-DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath)
+DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB)
 {
 	std::filesystem::path pp(filePath);
 
@@ -81,7 +81,8 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 
 	// Load texture using DirectXTex
 	HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
-	metadata.format = DirectX::MakeSRGB(metadata.format); // just add _sRGB to the dx12 format, so it will automatically apply gamma correction (?)
+	if(bMarkAsSRGB)
+		metadata.format = DirectX::MakeSRGB(metadata.format); // just add _sRGB to the dx12 format, so it will automatically apply gamma correction (?)
 
 	// Save image as dds (and generate mipmaps)
 	DirectX::ScratchImage imgWithMipMaps;
@@ -92,7 +93,8 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	if (hrr == S_OK)
 	{
 		metadata = imgWithMipMaps.GetMetadata();
-		metadata.format = DirectX::MakeSRGB(metadata.format);
+		if (bMarkAsSRGB)
+			metadata.format = DirectX::MakeSRGB(metadata.format);
 		//metadata.mipLevels = 4;
 		mipLevels = 8;
 	}

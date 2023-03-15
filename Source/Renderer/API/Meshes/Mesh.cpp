@@ -90,7 +90,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 		std::string texturePath(path.data);
 		std::string pathCombined(assetTexturePath + texturePath);
 		errorPath = pathCombined;
-		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
 
 		m_meshCB->CPUData().normalIndexInHeap = m_normalSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().bHaveNormalTex = true;
@@ -102,7 +102,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 		std::string texturePath(path.data);
 		std::string pathCombined(assetTexturePath + texturePath);
 		errorPath = pathCombined;
-		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined));
+		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
 
 		m_meshCB->CPUData().roughnessIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().metallicIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
@@ -116,7 +116,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 	m_meshHeader.indexByteSize = aMesh->mNumFaces * 3 * sizeof(uint32_t);
 	m_meshHeader.DDSByteSize = 0;
 
-	Serialize(std::string("TEST") + std::to_string(meshIndex) + ".vexmesh");
+	//Serialize(std::string("TEST") + std::to_string(meshIndex) + ".vexmesh");
 
 }
 
@@ -137,7 +137,11 @@ void SimpleMesh::DrawMesh(bool bShadow)
 	{
 		m_meshCB->SetAsInlineRootDescriptor(m_CmdList, 1);
 	}
-	m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
+
+	if(m_IndexedVertexBuffer->OnlyVertexBuffer())
+		m_CmdList->DrawInstanced(m_VertexCount, 1, 0, 0);
+	else
+		m_CmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 }
 
 void SimpleMesh::Serialize(std::filesystem::path pathToSerialize)
@@ -154,7 +158,7 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	std::string completePath = "Assets/" + filePath;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_SortByPType | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
 
 	for (int meshID = 0; meshID < scene->mNumMeshes; meshID++)
 	{

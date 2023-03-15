@@ -19,6 +19,7 @@ public:
 	__forceinline ID3D12Resource* GetIndexBufferResource() { return m_IndexBuffer; }
 	__forceinline const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() { return m_VertexBufferView; }
 	__forceinline const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() { return m_IndexBufferView; }
+	__forceinline bool OnlyVertexBuffer() { return m_bVertexBufferOnly; }
 	//__forceinline const D3D12_RAYTRACING_GEOMETRY_DESC& GetRayTracingGeometryDesc() { return m_RTVertexBuffer; }
 	//__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetVertexBufferSRVHandle() { return m_VertexBufferSRV_GPU; }
 	//__forceinline D3D12_GPU_DESCRIPTOR_HANDLE GetIndexBufferSRVHandle() { return m_IndexBufferSRV_GPU; }
@@ -26,7 +27,8 @@ public:
 	void Set(ID3D12GraphicsCommandList* cmdList, UINT startSlot = 0, UINT numViews = 1)
 	{
 		cmdList->IASetVertexBuffers(startSlot, numViews, &m_VertexBufferView);
-		cmdList->IASetIndexBuffer(&m_IndexBufferView);
+		if(!m_bVertexBufferOnly)
+			cmdList->IASetIndexBuffer(&m_IndexBufferView);
 	}
 
 	__forceinline int GetVertexBufferByteSize() { return m_vertexBufferByteSize; }
@@ -42,6 +44,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_IndexBufferView {};
 
 	// vertex Data:
+	bool m_bVertexBufferOnly = true;
 	int m_vertexBufferByteSize = 0;
 	int m_vertexBufferByteStride = 0;
 	int m_indexCount = 0;

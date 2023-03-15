@@ -87,9 +87,9 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	D3D12_STATIC_SAMPLER_DESC m_samplerDesc[2];
 	m_samplerDesc[0] = {};
 	m_samplerDesc[0].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	m_samplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	m_samplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	m_samplerDesc[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	m_samplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_samplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_samplerDesc[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	m_samplerDesc[0].MipLODBias = 0;
 	m_samplerDesc[0].MaxAnisotropy = 0;
 	m_samplerDesc[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
