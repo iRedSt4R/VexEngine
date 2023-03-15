@@ -59,7 +59,7 @@ using namespace DirectX;
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
-#define VEX_RENDER_USE_VALIDATOR 1
+#define VEX_RENDER_USE_VALIDATOR 0
 #define VEX_RENDER_USE_DEBUG_DEVICE 1
 
 #define VEX_RENDER_INIT_WINDOW_WIDTH 800

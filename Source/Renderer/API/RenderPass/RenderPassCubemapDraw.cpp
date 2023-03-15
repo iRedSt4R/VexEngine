@@ -74,7 +74,7 @@ void RenderPassCubeMapDraw::Create(DX12Renderer* renderer)
 	rootSignatureDesc.pParameters = rootParameters;
 	rootSignatureDesc.NumStaticSamplers = _countof(m_samplerDesc);
 	rootSignatureDesc.pStaticSamplers = m_samplerDesc;
-	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
 
 	ID3DBlob* signature;
 	ID3DBlob* errorBlob;
@@ -123,6 +123,22 @@ void RenderPassCubeMapDraw::Create(DX12Renderer* renderer)
 void RenderPassCubeMapDraw::BeginPass(uint8_t contextID)
 {
 	ID3D12GraphicsCommandList* cmdList = m_renderer->GetContextCmdList(contextID);
+
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 1920.f;
+	viewport.Height = 1080.f;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	D3D12_RECT rect = {};
+	rect.left = 0;
+	rect.top = 0;
+	rect.right = 1920.f;
+	rect.bottom = 1080.f;
+	cmdList->RSSetViewports(1, &viewport);
+	cmdList->RSSetScissorRects(1, &rect);
 
 	cmdList->SetPipelineState(m_PipelineStateObject);
 	cmdList->SetGraphicsRootSignature(m_RootSignature);

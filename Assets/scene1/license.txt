@@ -1,0 +1,11 @@
+Model Information:
+* title:	Lair of a killer surgeon
+* source:	https://sketchfab.com/3d-models/lair-of-a-killer-surgeon-273147068d2440a98f77f0551a4ce9d7
+* author:	epilogueronin (https://sketchfab.com/epilogueronin)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Lair of a killer surgeon" (https://sketchfab.com/3d-models/lair-of-a-killer-surgeon-273147068d2440a98f77f0551a4ce9d7) by epilogueronin (https://sketchfab.com/epilogueronin) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

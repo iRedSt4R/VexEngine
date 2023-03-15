@@ -50,7 +50,6 @@ private:
 	
 
 	//DEBUG
-
 	XMMATRIX Rotationx;
 	XMMATRIX Rotationy;
 	XMMATRIX Rotationz;
@@ -59,5 +58,10 @@ private:
 	XMMATRIX Translation;
 	XMMATRIX WVP;
 
+};
 
+class SkyboxSerializer
+{
+	static void Serialize(Skybox* pSkybox, std::string pathToSerialize);
+	static Skybox* Deserialize(std::string pathToSkyboxBlob);
 };

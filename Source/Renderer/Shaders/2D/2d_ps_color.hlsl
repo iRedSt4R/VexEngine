@@ -1,4 +1,4 @@
-TextureCube  TexAlbedo[] : register(t0); // bindless Texture2D access from shader visible heap
+Texture2D TexAlbedo[] : register(t0); // bindless Texture2D access from shader visible heap
 SamplerState BasicSampler : register(s0);
 SamplerState ShadowSampler : register(s1);
 
@@ -155,7 +155,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
     float3 finalColor = 0.f;
     float4 texColor = TexAlbedo[albedoIndexInHeap].Sample(BasicSampler, input.texCoord);
-    //float3 baseColor = texColor.xyz * float3(0.03f, 0.03f, 0.03f);
+    finalColor = texColor.xyz * float3(0.01f, 0.01f, 0.01f);
 
     if(texColor.a < 0.8f)
         discard;
@@ -191,20 +191,22 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     float lightDepthValue = input.shadowPos.z / input.shadowPos.w;
     lightDepthValue = lightDepthValue - 0.001f;
 
-    //if(depthValue < lightDepthValue)
-    //{
-        //return float4(finalColor, 1.f);
-    //}
+    if(depthValue < lightDepthValue)
+    {
+        return float4(finalColor, 1.f);
+    }
 
     // BRDF ---------------------------------------------------------------------------------
     float roughness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).g;
-    roughness = pow(roughness, 1/2.8f);
+    roughness = pow(roughness, 1/2.2f);
     float metalness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).r;
-    metalness = pow(metalness, 1/2.8f);
+    metalness = pow(metalness, 1/2.2f);
     float3 L = lightDir;
     float3 V = normalize(worldCameraPosition - input.pos.rgb);
     float3 N = normalize(input.normal);
     finalColor = BRDF(L, V, N, texColor.rgb, metalness, roughness);
+	//+ (texColor.xyz * float3(0.03f, 0.03f, 0.03f)
+	//finalColor = pow(finalColor, 1/2.2f);
     // BRDF ---------------------------------------------------------------------------------
 
     //return float4(TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).rgb, 1.f);

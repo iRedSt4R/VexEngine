@@ -19,8 +19,8 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	m_camera->Create();
 
 	// sponza mesh
-	//m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
-	//m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
+	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
+	m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
 
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
@@ -33,28 +33,28 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	m_dirLight->SetShadowTextureIndex(m_shadowDepthTexture->GetSRVIndexInsideHeap());
 
 	// passes defs:
-	//RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
-	//shadowPass->AddMesh(m_mesh);
-	//shadowPass->AddLightManager(m_lightNamanger);
-	//shadowPass->AddDepthBuffer(m_shadowDepthTexture);
-	//shadowPass->AddFPSCamera(m_camera);
-	//shadowPass->Create(m_renderer);
-	//m_renderPasses.push_back(shadowPass);
+	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
+	shadowPass->AddMesh(m_mesh);
+	shadowPass->AddLightManager(m_lightNamanger);
+	shadowPass->AddDepthBuffer(m_shadowDepthTexture);
+	shadowPass->AddFPSCamera(m_camera);
+	shadowPass->Create(m_renderer);
+	m_renderPasses.push_back(shadowPass);
 
 	
-
-	//RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
-	//twoDPass->Create(m_renderer);
-	//twoDPass->AddMesh(m_mesh);
-	//twoDPass->AddCamera(m_camera);
-	//twoDPass->SetLightManager(m_lightNamanger);
-	//twoDPass->AddShadowSRV(m_shadowDepthTexture);
-	//m_renderPasses.push_back(twoDPass);
-
 	RenderPassCubeMapDraw* cubemapDrawRenderPass = new RenderPassCubeMapDraw();
 	cubemapDrawRenderPass->AddCamera(m_camera);
 	cubemapDrawRenderPass->Create(m_renderer);
 	m_renderPasses.push_back(cubemapDrawRenderPass);
+
+	RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
+	twoDPass->Create(m_renderer);
+	twoDPass->AddMesh(m_mesh);
+	twoDPass->AddCamera(m_camera);
+	twoDPass->SetLightManager(m_lightNamanger);
+	twoDPass->AddShadowSRV(m_shadowDepthTexture);
+	m_renderPasses.push_back(twoDPass);
+
 
 	// From this call the m_WinApp will control the application flow from windows callbacks to Begin(), Update() and End()
 	m_winApp->AppLoop();
