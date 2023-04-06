@@ -90,3 +90,43 @@ private:
 	uint32_t m_constantBufferNumber = 0;
 	uint32_t m_srvNumber = 0;
 };
+
+/*
+template<typename TCacheType>
+class CacheBase
+{
+	using TCacheTypePtr = TCacheType*;
+	using TCacheBaseType = CacheBase<TCacheType>
+public:
+
+	static TCacheBaseType* Get()
+	{
+		if (s_instance == nullptr)
+		{
+			s_instance = new TCacheBaseType();
+		}
+		return s_instance;
+	}
+
+private:
+	ID3D12Device* m_device = nullptr;
+	ID3D12GraphicsCommandList* m_cmdList = nullptr;
+	std::unordered_map<std::wstring, TCacheTypePtr> m_textureCache = {};
+	inline static TCacheBaseType* s_instance = nullptr;
+};
+*/
+
+/*
+class MaterialFactory
+{
+public:
+	static void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) { s_device = device; s_cmdList0 = cmdList; };
+
+	static Material* CreatePBRMaterialNoTextures(float roughness, float metallness, XMFLOAT3 color);
+	static Material* CreatePBRMaterialWithTextures(std::wstring albedoPath, std::wstring normalPath, std::wstring roughnessPath, std::wstring metallicPath);
+	static Material* CreatePBRMaterialWithTextures(Texture2D* albedoTexture, Texture2D* normalTexture, Texture2D* roughnessTexture, Texture2D* metallicTexture);
+
+	inline static ID3D12Device* s_device = nullptr;
+	inline static ID3D12GraphicsCommandList* s_cmdList0 = nullptr;
+};
+*/

@@ -3,6 +3,7 @@
 #include <API/Camera/FPSCamera.h>
 #include <API/Textures/2DTexture.h>
 #include <API/Light/LightManager.h>
+#include <API/Meshes/Material.h>
 
 class SandboxApp : public IApplication
 {
@@ -35,4 +36,5 @@ private:
 
 	FPSCamera* m_camera = nullptr;
 	Mesh* m_mesh = nullptr;
+	Mesh* m_sphere = nullptr;
 };

@@ -20,6 +20,21 @@ struct EngineMeshHeader
 	uint32_t indexByteSize = 0;
 	uint32_t DDSByteSize = 0;
 };
+
+struct StaticMeshHeader
+{
+	uint8_t meshContentType = 0; // mesh type (for eg. which vertex layout is present)
+	uint32_t vertexByteSize = 0;
+	uint32_t vertexByteOffset = 0; // offset from binary data (without header)
+	uint32_t indexByteSize = 0;
+	uint32_t indexByteOffset = 0; // offset from binary data (without header)
+	uint32_t fullByteSize = 0; // full size (binary data)
+};
+
+struct MeshHeader
+{
+	uint32_t meshCount = 0;
+};
 #pragma pack(pop)
 
 class SimpleMesh
@@ -40,7 +55,10 @@ public:
 	void LoadMesh(const aiScene* scene, int meshIndex, std::string meshFolder);
 	void DrawMesh(bool bShadow = false);
 	void Serialize(std::filesystem::path pathToSerialize);
+	void SerializeHeader(std::ofstream& stream);
+	void SerializeBinary(std::ofstream& stream);
 	void Deserialize(std::filesystem::path blobPath);
+	void Deserialize(StaticMeshHeader* meshHeader, BYTE* binaryData);
 
 private:
 	float* m_Vertices = nullptr;
@@ -61,6 +79,7 @@ private:
 
 	// header used for serialization;
 	EngineMeshHeader m_meshHeader;
+	StaticMeshHeader m_staticMeshHeader;
 	//ShaderResource* m_MetalnessSRV;
 	ConstantBuffer<CBStaticMeshData>* m_meshCB = nullptr;
 };
@@ -80,10 +99,14 @@ public:
 	void LoadMesh(std::string filePath, std::string meshFolder);
 	void DrawMesh(bool bShadow = false);
 
+	void Serialize(std::filesystem::path pathToSerialize);
+	void Deserialize(std::filesystem::path pathToDeserialize);
+
 private:
 	std::vector<SimpleMesh*> m_Meshes;
 
 	// D3D12 
 	ID3D12Device* m_Device = nullptr;
 	ID3D12GraphicsCommandList* m_CmdList = nullptr;
+	MeshHeader m_meshHeader;
 };

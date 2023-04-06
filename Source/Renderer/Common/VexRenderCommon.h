@@ -49,6 +49,7 @@
 #include <chrono>
 #include <filesystem>
 #include <functional>
+#include <filesystem>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;

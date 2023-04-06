@@ -348,3 +348,10 @@ DX12Resource* DX12ResoruceAllocator::AllocateTextureCubeFromFilepath(ID3D12Graph
 	// return SRV
 	return returnResource;
 }
+
+
+
+//Material* MaterialFactory::CreatePBRMaterialNoTextures(float roughness, float metallness, XMFLOAT3 color)
+//{
+	//Material* newMaterial = new Material();
+//}

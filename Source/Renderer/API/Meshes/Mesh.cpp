@@ -1,6 +1,7 @@
 #include "Mesh.h"
 
-#define SCALE 0.005f
+//#define SCALE 0.005f
+#define SCALE 0.5f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -116,7 +117,14 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 	m_meshHeader.indexByteSize = aMesh->mNumFaces * 3 * sizeof(uint32_t);
 	m_meshHeader.DDSByteSize = 0;
 
-	//Serialize(std::string("TEST") + std::to_string(meshIndex) + ".vexmesh");
+	m_staticMeshHeader.meshContentType = 0;
+	m_staticMeshHeader.vertexByteSize = aMesh->mNumVertices * VERTEX_ATTRIBUTE_COUNT * sizeof(float);
+	m_staticMeshHeader.vertexByteOffset = 0;
+	m_staticMeshHeader.indexByteSize = aMesh->mNumFaces * 3 * sizeof(uint32_t);
+	m_staticMeshHeader.indexByteOffset = m_staticMeshHeader.vertexByteSize;
+	m_staticMeshHeader.fullByteSize = m_staticMeshHeader.vertexByteSize + m_staticMeshHeader.indexByteSize;
+
+	//Serialize(std::string("TEST") + std::to_string(meshIndex) + ".vexsmesh");
 
 }
 
@@ -147,9 +155,20 @@ void SimpleMesh::DrawMesh(bool bShadow)
 void SimpleMesh::Serialize(std::filesystem::path pathToSerialize)
 {
 	std::ofstream meshBinary(pathToSerialize, std::ios::binary);	
-	meshBinary.write((char*)&m_meshHeader, sizeof(EngineMeshHeader));
+	meshBinary.write((char*)&m_staticMeshHeader, sizeof(StaticMeshHeader));
 	meshBinary.write((char*)m_Vertices, m_meshHeader.vertexByteSize);
 	meshBinary.write((char*)m_Indicies, m_meshHeader.indexByteSize);
+}
+
+void SimpleMesh::SerializeHeader(std::ofstream& stream)
+{
+	stream.write((char*)&m_staticMeshHeader, sizeof(StaticMeshHeader));
+}
+
+void SimpleMesh::SerializeBinary(std::ofstream& stream)
+{
+	stream.write((char*)m_Vertices, m_meshHeader.vertexByteSize);
+	stream.write((char*)m_Indicies, m_meshHeader.indexByteSize);
 }
 
 // ----------------------- Mesh ----------------------- //
@@ -174,4 +193,29 @@ void Mesh::DrawMesh(bool bShadow)
 	{
 		mesh->DrawMesh(bShadow);
 	}
+}
+
+void Mesh::Serialize(std::filesystem::path pathToSerialize)
+{
+	std::ofstream meshBinary(pathToSerialize, std::ios::binary);
+
+	meshBinary.write((char*)&m_meshHeader, sizeof(MeshHeader));
+
+	for (auto& mesh : m_Meshes)
+	{
+		mesh->SerializeHeader(meshBinary);
+	}
+
+	BYTE offset = 0;
+	for (auto& mesh : m_Meshes)
+	{
+		mesh->SerializeBinary(meshBinary);
+		offset +=
+	}
+	//meshBinary.write((char*)m_Vertices, m_meshHeader.vertexByteSize);
+	//meshBinary.write((char*)m_Indicies, m_meshHeader.indexByteSize);
+}
+
+void Mesh::Deserialize(std::filesystem::path pathToDeserialize)
+{
 }

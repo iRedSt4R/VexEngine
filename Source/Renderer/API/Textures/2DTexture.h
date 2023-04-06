@@ -9,7 +9,7 @@ class Texture2D
 {
 public:
 	Texture2D(ID3D12Device* device) { m_device = device; };
-	~Texture2D();
+	~Texture2D() {};
 
 	void CreateFromFile(ID3D12GraphicsCommandList* cmdList, std::wstring pathToTexture, bool bMarkAsSRGB = true)
 	{ 
@@ -27,4 +27,32 @@ private:
 	ID3D12Device* m_device;
 
 	DX12Resource* m_textureResource = nullptr;
+};
+
+
+class Texture2DCache
+{
+public:
+	Texture2DCache() {};
+	~Texture2DCache() {};
+
+	void Init(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) { m_device = device; m_cmdList = cmdList; };
+
+	static Texture2DCache* Get()
+	{
+		if (s_instance == nullptr)
+		{
+			s_instance = new Texture2DCache();
+		}
+		return s_instance;
+	}
+
+	Texture2D* CreateTexture2D(std::wstring pathToTexture, bool bMarkAsSRGB = true);
+	__forceinline uint32_t GetCacheSize() { return m_textureCache.size(); }
+
+private:
+	inline static Texture2DCache* s_instance = nullptr;
+	ID3D12Device* m_device = nullptr;
+	ID3D12GraphicsCommandList* m_cmdList = nullptr;
+	std::unordered_map<std::wstring, Texture2D*> m_textureCache = {};
 };
