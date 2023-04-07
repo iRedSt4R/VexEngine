@@ -9,6 +9,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "Material.h"
 
 
 // memory layout : EngineMeshHeader | vertexBufferData | indexBufferData | ddsTextureData
@@ -24,6 +25,7 @@ struct EngineMeshHeader
 struct StaticMeshHeader
 {
 	uint8_t meshContentType = 0; // mesh type (for eg. which vertex layout is present)
+	uint8_t bHaveIndexBuffer = 0;
 	uint32_t vertexByteSize = 0;
 	uint32_t vertexByteOffset = 0; // offset from binary data (without header)
 	uint32_t indexByteSize = 0;
@@ -39,7 +41,12 @@ struct MeshHeader
 
 class SimpleMesh
 {
+	friend class Mesh;
+
 public:
+#if VEX_COOKER
+	SimpleMesh() {};
+#else
 	SimpleMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) 
 	{
 		m_Device = device; 
@@ -50,9 +57,11 @@ public:
 		m_roughnessMetallicSRV = new Texture2D(device);
 		m_meshCB = new ConstantBuffer<CBStaticMeshData>(device);
 	}
+#endif
 	~SimpleMesh() {};
 
 	void LoadMesh(const aiScene* scene, int meshIndex, std::string meshFolder);
+	void LoadBinaryMesh(char* binaryData, StaticMeshHeader& meshHeader, PBRMaterialHeader& materialHeader, uint32_t blobOffset);
 	void DrawMesh(bool bShadow = false);
 	void Serialize(std::filesystem::path pathToSerialize);
 	void SerializeHeader(std::ofstream& stream);
@@ -73,13 +82,20 @@ private:
 	ID3D12GraphicsCommandList* m_CmdList = nullptr;
 	DX12IndexedVertexBuffer* m_IndexedVertexBuffer = nullptr;
 
+#if !VEX_COOKER
 	Texture2D* m_albedoSRV = nullptr;
 	Texture2D* m_normalSRV = nullptr;
 	Texture2D* m_roughnessMetallicSRV = nullptr;
+#else
+	DirectX::Blob* m_albedoSRV = nullptr;
+	DirectX::Blob* m_normalSRV = nullptr;
+	DirectX::Blob* m_roughnessMetallicSRV = nullptr;
+#endif
 
 	// header used for serialization;
 	EngineMeshHeader m_meshHeader;
 	StaticMeshHeader m_staticMeshHeader;
+	PBRMaterialHeader m_materialHeader;
 	//ShaderResource* m_MetalnessSRV;
 	ConstantBuffer<CBStaticMeshData>* m_meshCB = nullptr;
 };
@@ -89,14 +105,20 @@ class Mesh
 	friend class AccelerationStructure;
 
 public:
+#if VEX_COOKER
+	Mesh() {};
+#else
 	Mesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) 
 	{ 
 		m_Device = device;
 		m_CmdList = cmdList; 
 	}
+#endif
+
 	~Mesh() {};
 
 	void LoadMesh(std::string filePath, std::string meshFolder);
+	void LoadBinaryMesh(std::string filePathToBlob);
 	void DrawMesh(bool bShadow = false);
 
 	void Serialize(std::filesystem::path pathToSerialize);

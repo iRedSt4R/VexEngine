@@ -155,6 +155,8 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
     float3 finalColor = 0.f;
     float4 texColor = TexAlbedo[albedoIndexInHeap].Sample(BasicSampler, input.texCoord);
+	//texColor.z = sqrt(1 - dot(texColor.xy, texColor.yx));
+	//texColor.z = dot(texColor.xy, texColor.yx)
     finalColor = texColor.xyz * float3(0.01f, 0.01f, 0.01f);
 
     if(texColor.a < 0.8f)
@@ -191,10 +193,10 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     float lightDepthValue = input.shadowPos.z / input.shadowPos.w;
     lightDepthValue = lightDepthValue - 0.001f;
 
-    if(depthValue < lightDepthValue)
-    {
-        return float4(finalColor, 1.f);
-    }
+    //if(depthValue < lightDepthValue)
+    //{
+     //   return float4(finalColor, 1.f);
+    //}
 
     // BRDF ---------------------------------------------------------------------------------
     float roughness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).g;
@@ -210,5 +212,5 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     // BRDF ---------------------------------------------------------------------------------
 
     //return float4(TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).rgb, 1.f);
-    return float4(finalColor, 1.f);
+    return float4(texColor.x, texColor.y, texColor.z, 1.f);
 }

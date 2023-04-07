@@ -21,6 +21,11 @@ target_link_libraries(VexSandbox dxcompiler)
 target_link_libraries(VexSandbox ${ENGINE_LIBRARY_NAME})
 target_compile_features(VexSandbox PRIVATE cxx_std_20)
 
+target_compile_definitions(VexSandbox PRIVATE
+    $<$<CONFIG:DebugCooker>:VEX_COOKER=1>
+    $<$<CONFIG:ReleaseCooker>:VEX_COOKER=1>
+)
+
 # Need for fopen to use same path inside VS as executable inside /bin dir 
 set_property(TARGET VexSandbox PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
 

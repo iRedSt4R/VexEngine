@@ -8,8 +8,8 @@
 struct PBRMaterialHeader
 {
 	uint32_t binaryByteSize = 0;
-	float roughness = 0;
-	float metalness = 0;
+	float roughness = 0.7f;
+	float metalness = 0.f;
 
 	uint8_t bHaveAlbedoTexture = 0;
 	uint32_t albedoTextureOffset = 0;

@@ -2,6 +2,7 @@
 
 #include "../../../Common/VexRenderCommon.h"
 #include "../DX12Resource.h"
+#include <DirectXTex.h>
 
 struct DX12DescriptorMemory
 {
@@ -74,6 +75,8 @@ public:
 
 	ID3D12Resource* AllocateConstantBuffer(uint32_t CBSize);
 	DX12Resource* AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
+	DirectX::Blob* LoadTexture2DFromFilepath(const std::wstring& filePath, bool bMarkAsSRGB = true);
+	DX12Resource* LoadTexture2DFromBinary(ID3D12GraphicsCommandList* cmdList, void* blobMemory, size_t blobByteSize, bool bMarkAsSRGB = true);
 	DX12Resource* AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV);
 	DX12Resource* AllocateTextureCubeFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
 

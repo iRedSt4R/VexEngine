@@ -14,4 +14,5 @@ public:
 	}
 
 private:
+	inline static DX12Renderer* s_renderer = nullptr;
 };

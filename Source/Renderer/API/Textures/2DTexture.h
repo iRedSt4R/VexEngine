@@ -16,6 +16,16 @@ public:
 		m_textureResource = DX12ResoruceAllocator::Get()->AllocateTexture2DFromFilepath(cmdList, pathToTexture, bMarkAsSRGB);
 	};
 
+	void CreateFromBinary(ID3D12GraphicsCommandList* cmdList, void* blobMemory, size_t blobByteSize, bool bMarkAsSRGB = true)
+	{
+		m_textureResource = DX12ResoruceAllocator::Get()->LoadTexture2DFromBinary(cmdList, blobMemory, blobByteSize, bMarkAsSRGB);
+	}
+
+	static DirectX::Blob* LoadFromFile(std::wstring pathToTexture, bool bMarkAsSRGB = true)
+	{
+		return DX12ResoruceAllocator::Get()->LoadTexture2DFromFilepath(pathToTexture, bMarkAsSRGB);
+	}
+
 	void SetAsGraphicsRootDescriptorTable(ID3D12GraphicsCommandList* cmdList, int rootParamIndex)
 	{
 		cmdList->SetGraphicsRootDescriptorTable(rootParamIndex, m_textureResource->GetSRV());

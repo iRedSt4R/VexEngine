@@ -17,6 +17,11 @@ file(GLOB_RECURSE SourceFiless
 add_library(${ENGINE_LIBRARY_NAME} STATIC ${SourceFiless})
 target_compile_features(${ENGINE_LIBRARY_NAME} PRIVATE cxx_std_20)
 
+target_compile_definitions(${ENGINE_LIBRARY_NAME} PRIVATE
+    $<$<CONFIG:DebugCooker>:VEX_COOKER=1>
+    $<$<CONFIG:ReleaseCooker>:VEX_COOKER=1>
+)
+
 # C++/Compiler setting
 set_property(TARGET ${ENGINE_LIBRARY_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${ENGINE_LIBRARY_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)

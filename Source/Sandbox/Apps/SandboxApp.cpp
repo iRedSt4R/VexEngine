@@ -21,16 +21,19 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	MaterialFactory::Init(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
 
 	// sponza mesh
-	//m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
+	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
 	//m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
+	//m_mesh->LoadBinaryMesh("Assets/sponza.vexmesh");
+	m_mesh->LoadBinaryMesh("Assets/sponaSerialized.vexmesh");
+	//m_mesh->Serialize("TestSponza.vexmesh");
 
-	m_sphere = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
-	m_sphere->LoadMesh("sphere/sphere.glb", "sphere/");
+	//m_sphere = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
+	//m_sphere->LoadMesh("sphere/sphere.glb", "sphere/");
 
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(0.9f, 0.9f, 0.9f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(1.0f, 1.0f, 1.0f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
 
 	// shadow framebuffer
@@ -39,8 +42,8 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 
 	// passes defs:
 	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
-	//shadowPass->AddMesh(m_mesh);
-	shadowPass->AddMesh(m_sphere);
+	shadowPass->AddMesh(m_mesh);
+	//shadowPass->AddMesh(m_sphere);
 	shadowPass->AddLightManager(m_lightNamanger);
 	shadowPass->AddDepthBuffer(m_shadowDepthTexture);
 	shadowPass->AddFPSCamera(m_camera);
@@ -55,18 +58,18 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 
 	RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
 	twoDPass->Create(m_renderer);
-	//twoDPass->AddMesh(m_mesh);
-	twoDPass->AddMesh(m_sphere);
+	twoDPass->AddMesh(m_mesh);
+	//twoDPass->AddMesh(m_sphere);
 	twoDPass->AddCamera(m_camera);
 	twoDPass->SetLightManager(m_lightNamanger);
 	twoDPass->AddShadowSRV(m_shadowDepthTexture);
 	m_renderPasses.push_back(twoDPass);
 
-	Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.7f, 0.2f, XMFLOAT3(1.f, 1.f, 1.f));
+	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.7f, 0.2f, XMFLOAT3(1.f, 1.f, 1.f));
 	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.0f, 0.0f, XMFLOAT3(0.f, 0.f, 0.f));
-	testMat->Deserialize("testmat.vexmaterial");
+	//testMat->Deserialize("testmat.vexmaterial");
 	//testMat->Serialize("testmat.vexmaterial");
-	delete testMat;
+	//delete testMat;
 	
 	// From this call the m_WinApp will control the application flow from windows callbacks to Begin(), Update() and End()
 	m_winApp->AppLoop();

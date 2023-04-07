@@ -1,5 +1,5 @@
 #include "DX12DescriptorHeap.h"
-#include <DirectXTex.h>
+
 
 DX12DescriptorHeap::DX12DescriptorHeap(ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 	:m_Device(device), m_CommandList(commandList)
@@ -182,6 +182,150 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
 	else
 		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
+	m_device->CreateShaderResourceView(shaderResource, &srvDesc, descMemory.m_CpuDescriptorMemory);
+	m_srvNumber++;
+
+	// create final DX12Resource
+	returnResource->AddResource(shaderResource);
+	returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
+
+	// return SRV
+	return returnResource;
+}
+
+DirectX::Blob* DX12ResoruceAllocator::LoadTexture2DFromFilepath(const std::wstring& filePath, bool bMarkAsSRGB /*= true*/)
+{
+#define COMPRESS 1
+
+	std::filesystem::path pp(filePath);
+
+	DirectX::TexMetadata metadata;
+	DirectX::ScratchImage scratchImage;
+
+	// Load texture using DirectXTex
+	HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
+
+	//if (hr != S_OK)
+		//return nullptr;
+
+	// Save image as dds (and generate mipmaps)
+	DirectX::ScratchImage imgWithMipMaps;
+	hr = DirectX::GenerateMipMaps(*scratchImage.GetImage(0, 0, 0), DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 8, imgWithMipMaps);
+
+	if (hr == S_OK)
+	{
+#if COMPRESS
+		metadata = imgWithMipMaps.GetMetadata();
+		DirectX::ScratchImage imgScratch;
+		DirectX::TexMetadata compressedMetadata = metadata;
+		hr = DirectX::Compress(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), compressedMetadata, DXGI_FORMAT_BC3_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch); // | DirectX::TEX_COMPRESS_PARALLEL
+		metadata = imgScratch.GetMetadata();
+		if (hr != S_OK)
+			__debugbreak();
+#endif
+		DirectX::Blob* retBlob = new DirectX::Blob();
+		hr = DirectX::SaveToDDSMemory(imgScratch.GetImage(0, 0, 0), metadata.mipLevels, metadata, DDS_FLAGS_FORCE_RGB, *retBlob);
+		if (hr != S_OK)
+			__debugbreak();
+
+		return retBlob;
+	}
+	else
+	{
+#if COMPRESS
+		DirectX::ScratchImage imgScratch;
+		hr = DirectX::Compress(scratchImage.GetImages(), scratchImage.GetImageCount(), scratchImage.GetMetadata(), DXGI_FORMAT_BC3_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch);
+		metadata = imgScratch.GetMetadata();
+
+		if (hr != S_OK)
+			__debugbreak();
+#endif
+		DirectX::Blob* retBlob = new DirectX::Blob();
+		hr = DirectX::SaveToDDSMemory(imgScratch.GetImage(0, 0, 0), metadata.mipLevels, metadata, DDS_FLAGS_FORCE_RGB, *retBlob);
+		if (hr != S_OK)
+			__debugbreak();
+
+		return retBlob;
+	}
+}
+
+DX12Resource* DX12ResoruceAllocator::LoadTexture2DFromBinary(ID3D12GraphicsCommandList* cmdList, void* blobMemory, size_t blobByteSize, bool bMarkAsSRGB /*= true*/)
+{
+	DX12Resource* returnResource = new DX12Resource();
+	ID3D12Resource* shaderResource;
+
+	DirectX::TexMetadata metadata;
+	DirectX::ScratchImage scratchImage;
+	HRESULT hr = DirectX::LoadFromDDSMemory(blobMemory, blobByteSize, DDS_FLAGS_FORCE_RGB, &metadata, scratchImage);
+	if(bMarkAsSRGB)
+		metadata.format = DirectX::MakeSRGB(metadata.format);
+
+	// Fill the resource desc
+	D3D12_RESOURCE_DESC textureDesc{};
+	textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+		metadata.format,
+		static_cast<UINT64>(metadata.width),
+		static_cast<UINT>(metadata.height),
+		static_cast<UINT16>(metadata.arraySize),
+		static_cast<UINT16>(metadata.mipLevels)
+	);
+
+	// Creating committed resource from desc
+	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	hr = m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&shaderResource));
+
+	// subresource info for copying
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources(scratchImage.GetImageCount());
+	const Image* pImagess = scratchImage.GetImages();
+
+	for (int i = 0; i < subresources.size(); ++i) {
+
+		auto& subresource = subresources[i];
+		subresource.RowPitch = pImagess[i].rowPitch;
+		subresource.SlicePitch = pImagess[i].slicePitch;
+		subresource.pData = pImagess[i].pixels;
+	}
+
+	UINT64 requiredSize = GetRequiredIntermediateSize(shaderResource, 0, subresources.size());
+
+	ID3D12Resource* intermediateResource;
+	heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto bufferType = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
+	hr = m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferType,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&intermediateResource)
+	);
+
+	if (hr != S_OK)
+	{
+		__debugbreak();
+	}
+
+	// Update data through upload heap
+	UpdateSubresources(cmdList, shaderResource, intermediateResource, 0, 0, subresources.size(), subresources.data());
+
+	// Change resource state from copy_dest to pixel_shader_resource
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(shaderResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	cmdList->ResourceBarrier(1, &barrier);
+
+	// Create SRV from resource
+	DX12DescriptorMemory descMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = metadata.mipLevels;
 	m_device->CreateShaderResourceView(shaderResource, &srvDesc, descMemory.m_CpuDescriptorMemory);
 	m_srvNumber++;
 

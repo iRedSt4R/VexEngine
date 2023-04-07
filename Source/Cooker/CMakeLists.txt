@@ -15,13 +15,18 @@ ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
 ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
-add_executable(VexCooker WIN32 ${SourceFiles})
+add_executable(VexCooker ${SourceFiles})
 target_link_libraries(VexCooker ${RENDER_LIBRARY_NAME})
 target_link_libraries(VexCooker dxcompiler)
 target_link_libraries(VexCooker ${ENGINE_LIBRARY_NAME})
 target_compile_features(VexCooker PRIVATE cxx_std_20)
 
+target_compile_definitions(VexCooker PRIVATE
+    $<$<CONFIG:DebugCooker>:VEX_COOKER=1>
+    $<$<CONFIG:ReleaseCooker>:VEX_COOKER=1>
+)
+
 # Need for fopen to use same path inside VS as executable inside /bin dir 
-set_property(TARGET VexSandbox PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+set_property(TARGET VexCooker PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SourceFiles})
