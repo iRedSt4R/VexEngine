@@ -11,6 +11,7 @@
 #include "../Meshes/Mesh.h"
 #include "../Light/LightManager.h"
 #include "../Meshes/Skybox.h"
+#include "../Meshes/MeshCollection.h"
 
 //Passes:
 // basic opaque pass for static geometry
@@ -23,6 +24,7 @@ public:
 	void EndPass(uint8_t contextID) override final;
 
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
+	void AddLevel(VexLevel* level) { m_level = level; }
 
 	void AddCamera(FPSCamera* camera) { m_camera = camera; }
 	void AddTexture(Texture2D* texture) { m_texture = texture; }
@@ -36,6 +38,7 @@ private:
 
 	//std::vector<DX12IndexedVertexBuffer*> m_vertexBuffers = {};
 	std::vector<Mesh*> m_meshes = {};
+	VexLevel* m_level = nullptr;
 
 	// Shaders
 	D3D12_SHADER_BYTECODE m_vsShader;
@@ -61,6 +64,7 @@ public:
 	void EndPass(uint8_t contextID) override final;
 
 	void AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
+	void AddLevel(VexLevel* level) { m_level = level; }
 	void AddDepthBuffer(DX12Resource* shadowDepthRes) { m_shadowDepth = shadowDepthRes; }
 	void AddLightManager(LightManager* lightManager) { m_lightManager = lightManager; }
 	void AddFPSCamera(FPSCamera* fpsCamera) { m_camera = fpsCamera; }
@@ -75,6 +79,7 @@ private:
 
 	// meshes
 	std::vector<Mesh*> m_meshes = {};
+	VexLevel* m_level = nullptr;
 
 	// shadow camera
 	ConstantBuffer<ShadowCameraCB>* m_shadowCameraCB;

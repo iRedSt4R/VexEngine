@@ -50,12 +50,20 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	rootCBVDescriptor4.ShaderRegister = 3;
 
 	// srv table
-	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
+	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[2];
 	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorTableRanges[0].NumDescriptors = VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE;
 	descriptorTableRanges[0].BaseShaderRegister = 0; // tx in shader, t0 in this case
 	descriptorTableRanges[0].RegisterSpace = 0;
 	descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	// cubeMpa table
+	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
+	descriptorTableRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorTableRanges[1].NumDescriptors = VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE;
+	descriptorTableRanges[1].BaseShaderRegister = 1; // tx in shader, t0 in this case
+	descriptorTableRanges[1].RegisterSpace = 0;
+	descriptorTableRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges);

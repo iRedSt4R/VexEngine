@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 //#define SCALE 0.005f
-#define SCALE 0.005f
+#define SCALE 0.5f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -24,9 +24,9 @@ std::wstring utf8toUtf16(const std::string& str)
 }
 
 // ----------------------- Simple Mesh ----------------------- //
-void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshFolder)
+void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, std::string meshFolder)
 {
-	aiMesh* aMesh = scene->mMeshes[meshIndex];
+	const aiMesh* aMesh = scene->mMeshes[meshNode->mMeshes[0]];
 	m_faceCount = aMesh->mNumFaces;
 	m_VertexCount = aMesh->mNumVertices;
 	m_IndexCount = m_faceCount * 3;
@@ -55,6 +55,8 @@ void SimpleMesh::LoadMesh(const aiScene* scene, int meshIndex, std::string meshF
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
 	}
+
+	m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
 
 	// Load indices from faces
 	m_Indicies = new uint32_t[aMesh->mNumFaces * 3];
@@ -224,7 +226,7 @@ void SimpleMesh::DrawMesh(bool bShadow)
 	m_meshCB->SendConstantDataToGPU();
 
 	m_IndexedVertexBuffer->Set(m_CmdList);
-	if (!bShadow)
+	if (1)
 	{
 		m_meshCB->SetAsInlineRootDescriptor(m_CmdList, 1);
 	}
@@ -275,14 +277,14 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
 
-	for (int meshID = 0; meshID < scene->mNumMeshes; meshID++)
+	for (int meshID = 0; meshID < scene->mRootNode->mNumChildren; meshID++)
 	{
 #if VEX_COOKER
 		SimpleMesh* simpleMesh = new SimpleMesh();
 #else
 		SimpleMesh* simpleMesh = new SimpleMesh(m_Device, m_CmdList);
-#endif;
-		simpleMesh->LoadMesh(scene, meshID, meshFolder);
+#endif
+		simpleMesh->LoadMesh(scene, scene->mRootNode->mChildren[meshID], meshFolder);
 		m_Meshes.push_back(simpleMesh);
 	}
 }

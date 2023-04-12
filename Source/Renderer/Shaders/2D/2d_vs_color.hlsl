@@ -52,13 +52,13 @@ VS_OUTPUT vs_main(VS_INPUT input)
 {
     VS_OUTPUT output;
     output.pos = float4(input.pos, 1.f);
-    //output.pos = mul(output.pos, meshWorld);
+    output.pos = mul(output.pos, meshWorld);
     output.pos = mul(output.pos, viewMatrix);
     output.pos = mul(output.pos, projectionMatrix);
     output.texCoord = input.texCoord;
-    output.normal = input.normal;
-    output.tangent = input.tangent;
-    output.bitangent = input.bitangent;
+    output.normal = mul(input.normal, meshWorld);
+    output.tangent = mul(input.tangent, meshWorld);
+    output.bitangent = mul(input.bitangent, meshWorld);
 
     // calculate pixel position in shadow map for comparison
     output.shadowPos = float4(input.pos, 1.f);

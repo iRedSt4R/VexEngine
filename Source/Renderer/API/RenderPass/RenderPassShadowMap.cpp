@@ -31,10 +31,18 @@ void RenderPassShadowMap::Create(DX12Renderer* renderer)
 	rootCBVDescriptor.RegisterSpace = 0;
 	rootCBVDescriptor.ShaderRegister = 0;
 
-	D3D12_ROOT_PARAMETER  rootParameters[1];
+	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor2;
+	rootCBVDescriptor2.RegisterSpace = 0;
+	rootCBVDescriptor2.ShaderRegister = 1;
+
+	D3D12_ROOT_PARAMETER  rootParameters[2];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].Descriptor = rootCBVDescriptor2;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.NumParameters = _countof(rootParameters);

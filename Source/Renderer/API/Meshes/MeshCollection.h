@@ -2,19 +2,15 @@
 #include "../../Common/VexRenderCommon.h"
 #include "Mesh.h"
 
-struct MeshCollectionHeader
-{
-	uint32_t meshCount = 0;
-};
-
-class MeshCollection
+class VexLevel
 {
 public:
-	MeshCollection();
-	~MeshCollection();
+	VexLevel() {};
+	~VexLevel() {};
 
 	void Serialize(std::filesystem::path pathToSerialize);
-	void AddToBatch(Mesh* meshToAdd);
+	void AddToLevel(Mesh* meshToAdd);
 private:
 	std::vector<Mesh*> m_meshes = {};
+	std::string m_levelName = {};
 };
