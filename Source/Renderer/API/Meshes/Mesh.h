@@ -60,7 +60,7 @@ public:
 #endif
 	~SimpleMesh() {};
 
-	void LoadMesh(const aiScene* scene, aiNode* meshNode, std::string meshFolder);
+	void LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex, std::string meshFolder);
 	void LoadBinaryMesh(char* binaryData, StaticMeshHeader& meshHeader, PBRMaterialHeader& materialHeader, uint32_t blobOffset);
 	void DrawMesh(bool bShadow = false);
 	void Serialize(std::filesystem::path pathToSerialize);

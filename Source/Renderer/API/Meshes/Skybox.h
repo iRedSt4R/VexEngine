@@ -37,6 +37,7 @@ public:
 	__forceinline DX12IndexedVertexBuffer* GetIndexedVertexBuffer() { return m_indxedVertexBuffer; }
 	__forceinline void BindIndexedVertexBuffer(ID3D12GraphicsCommandList* cmdList) { m_indxedVertexBuffer->Set(cmdList); }
 	__forceinline void BindConstantBuffer(ID3D12GraphicsCommandList* cmdList, UINT cbRootBindIndex) { m_cubeMapCB->SetAsInlineRootDescriptor(cmdList, cbRootBindIndex); }
+	__forceinline TextureCube* GetCubemapTexture() { return m_cubemapSRV; }
 private:
 
 	ID3D12Device* m_device = nullptr;

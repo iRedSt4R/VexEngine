@@ -218,7 +218,7 @@ DirectX::Blob* DX12ResoruceAllocator::LoadTexture2DFromFilepath(const std::wstri
 		metadata = imgWithMipMaps.GetMetadata();
 		DirectX::ScratchImage imgScratch;
 		DirectX::TexMetadata compressedMetadata = metadata;
-		hr = DirectX::Compress(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), compressedMetadata, DXGI_FORMAT_BC3_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch); // | DirectX::TEX_COMPRESS_PARALLEL
+		hr = DirectX::Compress(imgWithMipMaps.GetImages(), imgWithMipMaps.GetImageCount(), compressedMetadata, DXGI_FORMAT_BC7_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_BC7_QUICK | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch); // | DirectX::TEX_COMPRESS_PARALLEL
 		metadata = imgScratch.GetMetadata();
 		if (hr != S_OK)
 			__debugbreak();
@@ -234,7 +234,7 @@ DirectX::Blob* DX12ResoruceAllocator::LoadTexture2DFromFilepath(const std::wstri
 	{
 #if COMPRESS
 		DirectX::ScratchImage imgScratch;
-		hr = DirectX::Compress(scratchImage.GetImages(), scratchImage.GetImageCount(), scratchImage.GetMetadata(), DXGI_FORMAT_BC3_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch);
+		hr = DirectX::Compress(scratchImage.GetImages(), scratchImage.GetImageCount(), scratchImage.GetMetadata(), DXGI_FORMAT_BC7_UNORM, DirectX::TEX_COMPRESS_FLAGS::TEX_COMPRESS_DEFAULT | DirectX::TEX_COMPRESS_PARALLEL, 0.5f, imgScratch);
 		metadata = imgScratch.GetMetadata();
 
 		if (hr != S_OK)

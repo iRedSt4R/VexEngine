@@ -50,7 +50,7 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	rootCBVDescriptor4.ShaderRegister = 3;
 
 	// srv table
-	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[2];
+	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
 	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorTableRanges[0].NumDescriptors = VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE;
 	descriptorTableRanges[0].BaseShaderRegister = 0; // tx in shader, t0 in this case
@@ -58,19 +58,23 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// cubeMpa table
-	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1];
-	descriptorTableRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorTableRanges[1].NumDescriptors = VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE;
-	descriptorTableRanges[1].BaseShaderRegister = 1; // tx in shader, t0 in this case
-	descriptorTableRanges[1].RegisterSpace = 0;
-	descriptorTableRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges1[1];
+	descriptorTableRanges1[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorTableRanges1[0].NumDescriptors = VEX_TEXTURE_2D_BINDLESS_TABLE_SIZE;
+	descriptorTableRanges1[0].BaseShaderRegister = 1; // tx in shader, t0 in this case
+	descriptorTableRanges1[0].RegisterSpace = 1;
+	descriptorTableRanges1[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges);
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0];
 
+	D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable2;
+	descriptorTable2.NumDescriptorRanges = _countof(descriptorTableRanges1);
+	descriptorTable2.pDescriptorRanges = &descriptorTableRanges1[0];
+
 	// combine parameters
-	D3D12_ROOT_PARAMETER  rootParameters[5];
+	D3D12_ROOT_PARAMETER  rootParameters[6];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -91,8 +95,12 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	rootParameters[4].Descriptor = rootCBVDescriptor4;
 	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[5].DescriptorTable = descriptorTable2;
+	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 	// add sapler for texture
-	D3D12_STATIC_SAMPLER_DESC m_samplerDesc[2];
+	D3D12_STATIC_SAMPLER_DESC m_samplerDesc[3];
 	m_samplerDesc[0] = {};
 	m_samplerDesc[0].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 	m_samplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -123,6 +131,21 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	m_samplerDesc[1].RegisterSpace = 0;
 	m_samplerDesc[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	m_samplerDesc[2] = {};
+	m_samplerDesc[2].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	m_samplerDesc[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_samplerDesc[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_samplerDesc[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	m_samplerDesc[2].MipLODBias = 0;
+	m_samplerDesc[2].MaxAnisotropy = 0;
+	m_samplerDesc[2].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	m_samplerDesc[2].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	m_samplerDesc[2].MinLOD = 0.0f;
+	m_samplerDesc[2].MaxLOD = D3D12_FLOAT32_MAX;
+	m_samplerDesc[2].ShaderRegister = 2;
+	m_samplerDesc[2].RegisterSpace = 0;
+	m_samplerDesc[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.NumParameters = _countof(rootParameters);
 	rootSignatureDesc.pParameters = rootParameters;
@@ -134,7 +157,13 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 
 	ID3DBlob* signature;
 	ID3DBlob* errorBlob;
-	D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &errorBlob);
+	HRESULT grr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &errorBlob);
+
+	if (errorBlob)
+	{
+		auto error = (char*)errorBlob->GetBufferPointer();
+		std::string errorMsg = error;
+	}
 
 	m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature));
 
@@ -187,6 +216,7 @@ void RenderPassStaticOpaque::BeginPass(uint8_t contextID)
 	m_shadowDepth->ChangeState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, cmdList);
 
 	DX12ResoruceAllocator::Get()->SetBindlessTexture2DHeap(3, cmdList);
+	DX12ResoruceAllocator::Get()->SetBindlessTexture2DHeap(5, cmdList);
 }
 
 void RenderPassStaticOpaque::RunPass(uint8_t contextID)

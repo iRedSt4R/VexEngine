@@ -1,7 +1,8 @@
-Texture2D TexAlbedo[] : register(t0); // bindless Texture2D access from shader visible heap
-TextureCube cubemapTexture[] : register(t1); // same srv heap as above, but bind as textureCube (direct srvHeap indexing available in shader model 6.6 is not yet widely supported)
+Texture2D TexAlbedo[] : register(t0, space0); // bindless Texture2D access from shader visible heap
+TextureCube cubemapTexture[] : register(t1, space1); // same srv heap as above, but bind as textureCube (direct srvHeap indexing available in shader model 6.6 is not yet widely supported)
 SamplerState BasicSampler : register(s0);
 SamplerState ShadowSampler : register(s1);
+SamplerState cubemapSampler : register(s2);
 
 #define M_PI 3.14159265359f
 #define PI 3.14159265359f
@@ -15,6 +16,7 @@ struct VS_OUTPUT
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
     float4 shadowPos : TEXCOORD1;
+	float3 viewDirection : TEXCOORD2;
 };
 
 cbuffer CameraCB : register(b0)
@@ -32,12 +34,15 @@ cbuffer DirectionalLightCB : register(b2)
     float3 lightDir;
     uint shadowMapIndexInsideHeap;
     float3 lightColor;
-    float pad1;
+    int cubemapIndex;
 }
 
 cbuffer MeshDataCB : register(b1)
 {
     float4x4 meshWorld;
+	float3 materialColor;
+	uint materialRoughness;
+	uint materialMetalness;
     uint albedoIndexInHeap;
 	uint normalIndexInHeap;
 	uint roughnessIndexInHeap;
@@ -97,7 +102,7 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 
 	float alpha = roughness * roughness;
 
-	float NdotV = abs( dot (N , V )); // avoid artifact
+	float NdotV = abs( dot (N , V )) + 1e-5f; // avoid artifact
 	float LdotH = saturate ( dot (L , H ));
 	float NdotH = saturate ( dot (N , H ));
 	float NdotL = saturate ( dot (N , L ));
@@ -116,46 +121,42 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	// Diffuse BRDF
 	float Fd = Fr_DisneyDiffuse ( NdotV , NdotL , LdotH , roughness ) / PI;
 
+	// reflection
+	float3 reflectionVector = normalize(reflect(-V, N));
+	float smoothness = 1 - roughness;
+	float mipLevel = (1.0f - smoothness * smoothness) * 10.0f;
+	float4 cs = cubemapTexture[cubemapIndex].SampleLevel(cubemapSampler, reflectionVector, mipLevel);
+
+	//return cs.rgb;
 	return saturate((Fd * cAlbedo + Fr * float3(1.f, 1.f, 1.f)) * NdotH);
+	//return cs.rgb;
 }
 
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
-	float dX = 1.f/1920.f * 5.f;
-	float dY = 1.f/1080.f* 5.f;
+	float dX = 1.f/1920.f;
+	float dY = 1.f/1080.f;
     float3 finalColor = 0.f;
 	
     float4 texColor;
 	if(bHaveAlbedoTex)
 		texColor = TexAlbedo[albedoIndexInHeap].Sample(BasicSampler, input.texCoord);
 	else
-		texColor = float4(0.8f, 0.8f, 0.8f, 1.f);
-	//texColor.z = sqrt(1 - dot(texColor.xy, texColor.yx));
-	//texColor.z = dot(texColor.xy, texColor.yx)
+		texColor = float4(materialColor, 1.f);
+
     finalColor = texColor.xyz * float3(0.05f, 0.05f, 0.05f);
 
     if(texColor.a < 0.8f)
         discard;
 
-    //finalColor = texColor.xyz * float3(0.03f, 0.03f, 0.03f);
-    
     // calculate new normal from normal map if exists
-    if(0)
+    if(bHaveNormalTex)
     {
         float4 normalMap = TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord );
-        //normalMap = pow(normalMap, 1/2.2f);
         normalMap = (2.0f*normalMap) - 1.0f;
-
-        //Make sure tangent is completely orthogonal to normal
         input.tangent = normalize(input.tangent - dot(input.tangent, input.normal)*input.normal);
-
-        //Create the biTangent
         float3 biTangent = cross(input.normal, input.tangent);
-
-        //Create the "Texture Space"
         float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
-
-        //Convert normal from normal map to texture space and store in input.normal
         input.normal = normalize(mul(normalMap, texSpace));
     }
 
@@ -168,53 +169,17 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     float lightDepthValue = input.shadowPos.z / input.shadowPos.w;
     lightDepthValue = lightDepthValue - 0.001f;
 
-/*
-	float3 colorWithDepth = float3(0.f, 0.f, 0.f);
-	for(int id = 0; id < 16; id++)
-	{
-		float depthVal = TexAlbedo[shadowMapIndexInsideHeap].Sample(ShadowSampler, projectTexCoord + float2(dX * id, dY * id)).r;
-		if(depthValue < lightDepthValue)
-        	colorWithDepth = colorWithDepth + finalColor;
-		else
-			colorWithDepth = colorWithDepth +  float3(0.8f, 0.8f, 0.8f);
-
-		depthVal = TexAlbedo[shadowMapIndexInsideHeap].Sample(ShadowSampler, projectTexCoord + float2(-dX * id, dY * id)).r;
-		if(depthValue < lightDepthValue)
-        	colorWithDepth = colorWithDepth + finalColor;
-		else
-			colorWithDepth = colorWithDepth +  float3(0.8f, 0.8f, 0.8f);
-
-		depthVal = TexAlbedo[shadowMapIndexInsideHeap].Sample(ShadowSampler, projectTexCoord + float2(dX * id, -dY * id)).r;
-		if(depthValue < lightDepthValue)
-        	colorWithDepth = colorWithDepth + finalColor;
-		else
-			colorWithDepth = colorWithDepth +  float3(0.8f, 0.8f, 0.8f);
-
-		depthVal = TexAlbedo[shadowMapIndexInsideHeap].Sample(ShadowSampler, projectTexCoord + float2(-dX * id, -dY * id)).r;
-		if(depthValue < lightDepthValue)
-        	colorWithDepth = colorWithDepth + finalColor;
-		else
-			colorWithDepth = colorWithDepth +  float3(0.8f, 0.8f, 0.8f);	
-	}
-
-	colorWithDepth = colorWithDepth / (16.f * 4.f);
-*/
-
-    //if(depthValue < lightDepthValue)
+	//if(depthValue < lightDepthValue)
     //{
      //   return float4(finalColor, 1.f);
-   //}
+    //}
+
     // BRDF ---------------------------------------------------------------------------------
-    //float roughness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).g;
-    //roughness = pow(roughness, 1/2.2f);
-   // float metalness = TexAlbedo[roughnessIndexInHeap].Sample( BasicSampler, input.texCoord ).r;
-    //metalness = pow(metalness, 1/2.2f);
     float3 L = lightDir;
-    float3 V = normalize(worldCameraPosition.xyz - input.pos.xyz);
+    float3 V = input.viewDirection;
     float3 N = normalize(input.normal);
-    finalColor = finalColor + BRDF(L, -V, N, texColor.rgb, 0.6f, 0.4f);
-	//+ (texColor.xyz * float3(0.03f, 0.03f, 0.03f)
-	//finalColor = pow(finalColor, 1/2.2f);
+    finalColor = finalColor + BRDF(L, V, N, texColor.rgb, materialMetalness, materialRoughness);
+	//finalColor = finalColor + BRDF(L, V, N, texColor.rgb, 0.f, 0.1f);
     // BRDF ---------------------------------------------------------------------------------
 
     //return float4(TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).rgb, 1.f);

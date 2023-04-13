@@ -14,6 +14,7 @@ public:
 		XMFLOAT3 lightDirection;
 		uint32_t shadowMapIndexInsideHeap;
 		XMFLOAT3 lightColor;
+		int cubemapIndex;
 	};
 
 public:
@@ -24,6 +25,12 @@ public:
 	void SetShadowTextureIndex(uint32_t shadowTextureIndex) 
 	{ 
 		m_constantBuffer->CPUData().shadowMapIndexInsideHeap = shadowTextureIndex;
+		m_constantBuffer->SendConstantDataToGPU();
+	}
+
+	void SetCubemapTextureIndex(int cubemapIndex) 
+	{
+		m_constantBuffer->CPUData().cubemapIndex = cubemapIndex;
 		m_constantBuffer->SendConstantDataToGPU();
 	}
 

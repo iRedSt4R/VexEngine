@@ -15,12 +15,14 @@ struct VS_OUTPUT
     float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
     float4 shadowPos : TEXCOORD1;
+    float3 viewDirection : TEXCOORD2;
 };
 
 cbuffer CameraCB : register(b0)
 {
 	float4x4 viewMatrix;
 	float4x4 projectionMatrix;
+    float4x4 invViewProjMatrix;
     float4 worldCameraPosition;
 };
 
@@ -59,6 +61,9 @@ VS_OUTPUT vs_main(VS_INPUT input)
     output.normal = mul(input.normal, meshWorld);
     output.tangent = mul(input.tangent, meshWorld);
     output.bitangent = mul(input.bitangent, meshWorld);
+
+	output.viewDirection = worldCameraPosition.xyz - output.pos.xyz;
+	output.viewDirection = normalize(output.viewDirection);
 
     // calculate pixel position in shadow map for comparison
     output.shadowPos = float4(input.pos, 1.f);

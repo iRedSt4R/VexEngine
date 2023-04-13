@@ -104,6 +104,8 @@ public:
 
 	void AddCamera(FPSCamera* camera) { m_camera = camera; }
 
+	__forceinline Skybox* GetSkybox() { return m_skybox; }
+
 private:
 	// Root signature and PSO unique to this pass
 	ID3D12RootSignature* m_RootSignature;

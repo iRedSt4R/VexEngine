@@ -120,7 +120,6 @@ void RenderPassShadowMap::RunPass(uint8_t contextID)
 	m_shadowCameraCB->SendConstantDataToGPU();
 	m_shadowCameraCB->SetAsInlineRootDescriptor(cmdList, 0);
 	
-
 	for (auto& mehes : m_meshes)
 	{
 		mehes->DrawMesh(true);

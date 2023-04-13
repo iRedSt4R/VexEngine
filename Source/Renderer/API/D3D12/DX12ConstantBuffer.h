@@ -26,7 +26,6 @@ struct CameraCB
 	XMFLOAT4X4 projectionMatrix;
 	XMFLOAT4X4 invViewProjMatrix;
 	XMFLOAT4 worldCameraPosition;
-	XMFLOAT3X4 pad2;
 };
 
 struct ShadowCameraCB
@@ -44,6 +43,9 @@ struct CBSceneModel
 struct CBStaticMeshData
 {
 	XMFLOAT4X4 meshWorldMatrix; // mesh position/rotation/scale
+	XMFLOAT3 color;
+	float roughness = 1.f;
+	float metalness = 0.f;
 	uint32_t albedoIndexInHeap = 0;
 	uint32_t normalIndexInHeap = 0;
 	uint32_t roughnessIndexInHeap = 0;

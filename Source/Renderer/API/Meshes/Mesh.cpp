@@ -24,9 +24,9 @@ std::wstring utf8toUtf16(const std::string& str)
 }
 
 // ----------------------- Simple Mesh ----------------------- //
-void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, std::string meshFolder)
+void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex, std::string meshFolder)
 {
-	const aiMesh* aMesh = scene->mMeshes[meshNode->mMeshes[0]];
+	const aiMesh* aMesh = meshNode == nullptr ? scene->mMeshes[meshIndex] : scene->mMeshes[meshNode->mMeshes[0]];
 	m_faceCount = aMesh->mNumFaces;
 	m_VertexCount = aMesh->mNumVertices;
 	m_IndexCount = m_faceCount * 3;
@@ -55,8 +55,11 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, std::string me
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
 	}
-
-	m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
+	//if (meshNode)
+	//	m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
+	//else
+		//XMStoreFloat4x4(&m_meshCB->CPUData().meshWorldMatrix, DirectX::XMMatrixIdentity());
+		//m_meshCB->CPUData().meshWorldMatrix = DirectX::XMMatrixIdentity();
 
 	// Load indices from faces
 	m_Indicies = new uint32_t[aMesh->mNumFaces * 3];
@@ -95,6 +98,16 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, std::string me
 		m_meshCB->CPUData().albedoIndexInHeap = m_albedoSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().bHaveAlbedoTex = true;
 #endif
+	}
+	else
+	{
+		aiMaterial* material = scene->mMaterials[aMesh->mMaterialIndex];
+
+		aiColor3D color(0.f, 0.f, 0.f);
+		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		m_meshCB->CPUData().color.x = color.r;
+		m_meshCB->CPUData().color.y = color.g;
+		m_meshCB->CPUData().color.z = color.b;
 	}
 
 	// normal map
@@ -144,6 +157,21 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, std::string me
 		m_meshCB->CPUData().bHaveRoughnessTex = true;
 		m_meshCB->CPUData().bHaveMetallicTex = true;
 #endif
+	}
+	else
+	{
+		aiMaterial* material = scene->mMaterials[aMesh->mMaterialIndex];
+
+		//aiColor3D color(0.f, 0.f, 0.f);
+		float roughnessFactor = 1.f;
+		material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughnessFactor);
+		m_meshCB->CPUData().roughness = roughnessFactor;
+
+		float metallicFactor = 0.f;
+		material->Get(AI_MATKEY_METALLIC_FACTOR, metallicFactor);
+		m_meshCB->CPUData().metalness = metallicFactor;
+
+
 	}
 #if !VEX_COOKER
 	m_IndexedVertexBuffer->Create(m_CmdList, m_VertexCount * 4 * VERTEX_ATTRIBUTE_COUNT, VERTEX_ATTRIBUTE_COUNT * 4, m_IndexCount, m_Vertices, m_Indicies);
@@ -277,14 +305,16 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
 
-	for (int meshID = 0; meshID < scene->mRootNode->mNumChildren; meshID++)
+	//for (int meshID = 0; meshID < scene->mRootNode->mNumChildren; meshID++)
+	for (int meshID = 0; meshID < scene->mNumMeshes; meshID++)
 	{
 #if VEX_COOKER
 		SimpleMesh* simpleMesh = new SimpleMesh();
 #else
 		SimpleMesh* simpleMesh = new SimpleMesh(m_Device, m_CmdList);
 #endif
-		simpleMesh->LoadMesh(scene, scene->mRootNode->mChildren[meshID], meshFolder);
+		//simpleMesh->LoadMesh(scene, scene->mRootNode->mChildren[meshID], meshID, meshFolder);
+		simpleMesh->LoadMesh(scene, nullptr, meshID, meshFolder);
 		m_Meshes.push_back(simpleMesh);
 	}
 }
