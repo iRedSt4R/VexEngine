@@ -414,7 +414,13 @@ DX12Resource* DX12ResoruceAllocator::AllocateTextureCubeFromFilepath(ID3D12Graph
 	DirectX::ScratchImage scratchImage;
 
 	// Load cubemap dds from file
-	HRESULT hr = DirectX::LoadFromDDSFile(filePath.c_str(), DDS_FLAGS_NONE, &metadata, scratchImage);
+	HRESULT hr = DirectX::LoadFromDDSFile(filePath.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, scratchImage);
+	//HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
+
+	//mipmaps gen
+	//DirectX::ScratchImage scratchImageMips;
+	//hr = DirectX::GenerateMipMaps3D(scratchImage.GetImages(), scratchImage.GetImageCount(), scratchImage.GetMetadata(), DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 8, scratchImageMips);
+	//metadata = scratchImageMips.GetMetadata();
 
 	// Fill the resource desc
 	D3D12_RESOURCE_DESC textureDesc{};

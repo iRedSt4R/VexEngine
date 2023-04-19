@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 //#define SCALE 0.005f
-#define SCALE 0.5f
+#define SCALE 0.005f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -55,10 +55,10 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
 	}
-	//if (meshNode)
-	//	m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
-	//else
-		//XMStoreFloat4x4(&m_meshCB->CPUData().meshWorldMatrix, DirectX::XMMatrixIdentity());
+	if (meshNode)
+		m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
+	else
+		XMStoreFloat4x4(&m_meshCB->CPUData().meshWorldMatrix, DirectX::XMMatrixIdentity());
 		//m_meshCB->CPUData().meshWorldMatrix = DirectX::XMMatrixIdentity();
 
 	// Load indices from faces
@@ -105,9 +105,9 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 
 		aiColor3D color(0.f, 0.f, 0.f);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-		m_meshCB->CPUData().color.x = color.r;
-		m_meshCB->CPUData().color.y = color.g;
-		m_meshCB->CPUData().color.z = color.b;
+		m_meshCB->CPUData().color.x = 1.f;
+		m_meshCB->CPUData().color.y = 1.f;
+		m_meshCB->CPUData().color.z = 1.f;
 	}
 
 	// normal map
@@ -125,7 +125,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 			m_materialHeader.normalTextureOffset = m_materialHeader.albedoTextureByteSize;
 		}
 #else
-		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
+		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), true);
 
 		m_meshCB->CPUData().normalIndexInHeap = m_normalSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().bHaveNormalTex = true;
@@ -150,7 +150,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 			m_materialHeader.metallicTextureOffset = m_materialHeader.albedoTextureByteSize + m_materialHeader.normalTextureByteSize;
 		}
 #else
-		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
+		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), true);
 
 		m_meshCB->CPUData().roughnessIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().metallicIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
@@ -303,7 +303,8 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	std::string completePath = "Assets/" + filePath;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
+	//importer.SetPropertyFloat(AI_CONFIG_PP_CT_MAX_SMOOTHING_ANGLE, 0);
+	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded);
 
 	//for (int meshID = 0; meshID < scene->mRootNode->mNumChildren; meshID++)
 	for (int meshID = 0; meshID < scene->mNumMeshes; meshID++)

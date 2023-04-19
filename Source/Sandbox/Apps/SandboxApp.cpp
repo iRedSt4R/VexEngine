@@ -22,8 +22,8 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 
 	// sponza mesh
 	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
-	m_mesh->LoadMesh("sull/scene.gltf", "sull/");
-	//m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
+	//m_mesh->LoadMesh("sull/scene.gltf", "sull/");
+	m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
 	//m_mesh->LoadMesh("spheresRoughness.glb", "");
 	//m_mesh->LoadBinaryMesh("Assets/sponza.vexmesh");
 	//m_mesh->LoadBinaryMesh("Assets/sponaSerialized.vexmesh");
@@ -56,10 +56,10 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	
 	RenderPassCubeMapDraw* cubemapDrawRenderPass = new RenderPassCubeMapDraw();
 	cubemapDrawRenderPass->AddCamera(m_camera);
-	cubemapDrawRenderPass->Create(m_renderer);
-	m_renderPasses.push_back(cubemapDrawRenderPass);
+	//cubemapDrawRenderPass->Create(m_renderer);
+	//m_renderPasses.push_back(cubemapDrawRenderPass);
 
-	m_dirLight->SetCubemapTextureIndex(cubemapDrawRenderPass->GetSkybox()->GetCubemapTexture()->GetDX12Resource()->GetSRVIndexInsideHeap());
+	//m_dirLight->SetCubemapTextureIndex(cubemapDrawRenderPass->GetSkybox()->GetCubemapTexture()->GetDX12Resource()->GetSRVIndexInsideHeap());
 
 	RenderPassStaticOpaque* twoDPass = new RenderPassStaticOpaque();
 	twoDPass->Create(m_renderer);
