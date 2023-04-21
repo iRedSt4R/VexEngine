@@ -16,7 +16,7 @@ file(GLOB_RECURSE SourceFiless
 #define output (static lib)
 add_library(${RENDER_LIBRARY_NAME} STATIC ${SourceFiless})
 target_link_libraries(${RENDER_LIBRARY_NAME} DirectXTex.lib)
-target_link_libraries(${RENDER_LIBRARY_NAME} assimp-vc143-mt.lib)
+target_link_libraries(${RENDER_LIBRARY_NAME} assimp-vc142-mt.lib)
 
 target_compile_definitions(${RENDER_LIBRARY_NAME} PRIVATE
     $<$<CONFIG:DebugCooker>:VEX_COOKER=1>

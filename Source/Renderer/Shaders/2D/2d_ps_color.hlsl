@@ -132,7 +132,7 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	float3 reflectionVector = normalize(reflect(-V, N));
 	float smoothness = 1 - roughness;
 	float mipLevel = (1.0f - smoothness * smoothness) * 10.0f;
-	float4 cs = cubemapTexture[cubemapIndex].SampleLevel(cubemapSampler, reflectionVector, mipLevel);
+	//float4 cs = cubemapTexture[cubemapIndex].SampleLevel(cubemapSampler, reflectionVector, mipLevel);
 
  	float3 kS = F;
     float3 kD = float3(1.0, 1.0, 1.0) - kS;
@@ -144,7 +144,8 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	//float3 diffuseWithRef = ((Fd * cAlbedo * 1.2f *  NdotL) + (Fr * float3(1.f, 1.f, 1.f) * NdotL));
 	//return saturate((Fd * cAlbedo * NdotL) + (Fr * float3(1.f, 1.f, 1.f))) * NdotL;
 	//* float3(0.9f, 0.75f, 0.4f)
-	return ((albedoColor + Fr * specColor * 1.f) * Fd * 18.f * float3(0.9f, 0.75f, 0.4f) * NdotL);
+	//float3(0.9f, 0.75f, 0.4f) 
+	return ((albedoColor + Fr * specColor * 1.f) * Fd * 2.f * float3(1.f, 1.f, 1.f) * NdotL);
 	//return cs.rgb * NdotL;
 	//return cs.rgb;
 }
@@ -197,14 +198,14 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
 
 	float finalMetallics = materialMetalness;
 	if(bHaveMetallicTex)
-		finalMetallics = TexAlbedo[roughnessIndexInHeap].Sample(BasicSampler, input.texCoord).r;
+		finalMetallics = TexAlbedo[roughnessIndexInHeap].Sample(BasicSampler, input.texCoord).b;
 	
 
     // BRDF ---------------------------------------------------------------------------------
     float3 L = lightDir;
     float3 V = input.viewDirection;
     float3 N = normalize(input.normal);
-    finalColor = (BRDF(L, V, N, texColor.rgb, 1.f, min(finalRoughness+0.001f, 1.f)));
+    finalColor = (BRDF(L, V, N, texColor.rgb, finalMetallics, min(finalRoughness+0.001f, 1.f)));
 	//finalColor = finalColor + BRDF(L, V, N, texColor.rgb, 0.f, 0.1f);
     // BRDF ---------------------------------------------------------------------------------
 

@@ -79,6 +79,8 @@ public:
 	DX12Resource* LoadTexture2DFromBinary(ID3D12GraphicsCommandList* cmdList, void* blobMemory, size_t blobByteSize, bool bMarkAsSRGB = true);
 	DX12Resource* AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV);
 	DX12Resource* AllocateTextureCubeFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
+	DX12Resource* AllocateHDRIFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
+	DX12Resource* AllocateEmptyCubemap(ID3D12GraphicsCommandList* cmdList, size_t width, size_t height, bool initSRV, bool initUAV);
 
 private:
 	inline static DX12ResoruceAllocator* s_instance = nullptr;
