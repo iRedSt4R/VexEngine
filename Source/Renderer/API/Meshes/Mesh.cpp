@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 //#define SCALE 0.005f
-#define SCALE 0.005f
+#define SCALE 1.f
 #define VERTEX_ATTRIBUTE_COUNT 14
 
 std::wstring utf8toUtf16(const std::string& str)
@@ -47,14 +47,70 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 6] = aMesh->mTextureCoords[0][vertexID].x;
 		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 7] = aMesh->mTextureCoords[0][vertexID].y;
 
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 8] = aMesh->mTangents[vertexID].x;
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 9] = aMesh->mTangents[vertexID].y;
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 10] = aMesh->mTangents[vertexID].z;
+		if (aMesh->mTangents != nullptr)
+		{
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 8] = aMesh->mTangents[vertexID].x;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 9] = aMesh->mTangents[vertexID].y;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 10] = aMesh->mTangents[vertexID].z;
 
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 11] = aMesh->mBitangents[vertexID].x;
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
-		m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 11] = aMesh->mBitangents[vertexID].x;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = aMesh->mBitangents[vertexID].y;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = aMesh->mBitangents[vertexID].z;
+		}
+		else
+		{
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 8] = 1.f;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 9] = 1.f;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 10] = 1.f;
+
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 11] = 1.f;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 12] = 1.f;
+			m_Vertices[vertexID * VERTEX_ATTRIBUTE_COUNT + 13] = 1.f;
+		}
 	}
+
+	/*
+	for (unsigned int i = 0; i < aMesh->mNumFaces; ++i)
+	{
+		const aiFace& face = aMesh->mFaces[i];
+
+		// Get the vertex positions, texture coordinates, and indices for the current face
+		aiVector3D pos[3], uv[3];
+		for (unsigned int j = 0; j < 3; ++j)
+		{
+			pos[j] = aMesh->mVertices[face.mIndices[j]];
+			uv[j] = aMesh->mTextureCoords[0][face.mIndices[j]];
+		}
+
+		// Calculate the tangent and bitangent vectors
+		aiVector3D deltaPos1 = pos[1] - pos[0];
+		aiVector3D deltaPos2 = pos[2] - pos[0];
+		aiVector3D deltaUV1 = uv[1] - uv[0];
+		aiVector3D deltaUV2 = uv[2] - uv[0];
+
+		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+		aiVector3D tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+		aiVector3D bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+		tangent = tangent.Normalize();
+		bitangent = bitangent.Normalize();
+
+		// Accumulate the tangent and bitangent vectors for each vertex
+
+		for (unsigned int j = 0; j < 3; ++j)
+		{
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 8] = tangent.x;
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 9] = tangent.y;
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 10] = tangent.z;
+
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 11] = bitangent.x;
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 12] = bitangent.y;
+			m_Vertices[face.mIndices[j] * VERTEX_ATTRIBUTE_COUNT + 13] = bitangent.z;
+		}
+
+	}
+	
+
+	*/
 	if (meshNode)
 		m_meshCB->CPUData().meshWorldMatrix = DirectX::XMFLOAT4X4((const float*)(&(meshNode->mTransformation)));
 	else
@@ -106,8 +162,8 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 		aiColor3D color(0.f, 0.f, 0.f);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 		m_meshCB->CPUData().color.x = 1.f;
-		m_meshCB->CPUData().color.y = 1.f;
-		m_meshCB->CPUData().color.z = 1.f;
+		m_meshCB->CPUData().color.y = 0.f;
+		m_meshCB->CPUData().color.z = 0.f;
 	}
 
 	// normal map
@@ -125,7 +181,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 			m_materialHeader.normalTextureOffset = m_materialHeader.albedoTextureByteSize;
 		}
 #else
-		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), true);
+		m_normalSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
 
 		m_meshCB->CPUData().normalIndexInHeap = m_normalSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().bHaveNormalTex = true;
@@ -150,7 +206,7 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 			m_materialHeader.metallicTextureOffset = m_materialHeader.albedoTextureByteSize + m_materialHeader.normalTextureByteSize;
 		}
 #else
-		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), true);
+		m_roughnessMetallicSRV->CreateFromFile(m_CmdList, utf8toUtf16(pathCombined), false);
 
 		m_meshCB->CPUData().roughnessIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
 		m_meshCB->CPUData().metallicIndexInHeap = m_roughnessMetallicSRV->GetDX12Resource()->GetSRVIndexInsideHeap();
@@ -303,8 +359,10 @@ void Mesh::LoadMesh(std::string filePath, std::string meshFolder)
 	std::string completePath = "Assets/" + filePath;
 
 	Assimp::Importer importer;
-	//importer.SetPropertyFloat(AI_CONFIG_PP_CT_MAX_SMOOTHING_ANGLE, 0);
-	const aiScene* scene = importer.ReadFile(completePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded);
+	//importer.SetPropertyFloat("")
+	//importer.SetPropertyFloat(AI_CONFIG_PP_CT_MAX_SMOOTHING_ANGLE, 181.f);
+	//const aiScene* scene = importer.ReadFile(completePath,  aiProcess_JoinIdenticalVertices | aiProcess_FixInfacingNormals | aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_ConvertToLeftHanded | aiProcess_PreTransformVertices);
+	const aiScene* scene = importer.ReadFile(completePath, aiProcess_JoinIdenticalVertices | aiProcess_FixInfacingNormals | aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_ConvertToLeftHanded | aiProcess_PreTransformVertices);
 
 	//for (int meshID = 0; meshID < scene->mRootNode->mNumChildren; meshID++)
 	for (int meshID = 0; meshID < scene->mNumMeshes; meshID++)

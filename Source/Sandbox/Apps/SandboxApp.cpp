@@ -23,8 +23,8 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	// sponza mesh
 	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
 	//m_mesh->LoadMesh("sull/scene.gltf", "sull/");
-	m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
-	//m_mesh->LoadMesh("spheresRoughness.glb", "");
+	//m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
+	m_mesh->LoadMesh("spheresRoughness.glb", "");
 	//m_mesh->LoadBinaryMesh("Assets/sponza.vexmesh");
 	//m_mesh->LoadBinaryMesh("Assets/sponaSerialized.vexmesh");
 	//m_mesh->Serialize("TestSponza.vexmesh");

@@ -1,7 +1,7 @@
 #include "ShadowCamera.h"
 #include "../Light/LightManager.h"
 
-#define DIR_CAMERA_HEIGHT 1.f
+#define DIR_CAMERA_HEIGHT 25.f
 
 void ShadowCamera::InitWithDirectionalLight(DirectionalLight* dirLight, float orthoWidth, float orthoHeight, float nearFlane, float farPlane)
 {

@@ -13,7 +13,7 @@ struct VS_OUTPUT
     float4 pos: SV_POSITION;
     float3 normal : NORMAL;
     float2 texCoord : TEXCOORD0;
-    float3 tangent : TEXCOORD3;
+    float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
     float4 shadowPos : TEXCOORD1;
 	float3 viewDirection : TEXCOORD2;
@@ -103,7 +103,7 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 
 	float alpha = roughness * roughness;
 
-	float NdotV = abs( dot (N , V )) + 1e-5f; // avoid artifact
+	float NdotV = abs( dot (N , V )); // avoid artifact
 	float LdotH = saturate ( dot (L , H ));
 	float NdotH = saturate ( dot (N , H ));
 	float NdotL = saturate ( dot (N , L ));
@@ -112,7 +112,8 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	float energyFactor = lerp(1.0f, 1.0f / 1.51f, roughness);
 	float fd90 = energyBias + 2.0f * (LdotH * LdotH) * roughness;
 	//float fd90 = 0.f;
-	float f0 = 0.04f;
+	//float f0 = 1.f;
+	float3 f0 = float3(0.04f, 0.04f, 0.04f);
 	f0 = lerp(f0, cAlbedo.rgb, metallic);
 	
 	// Specular BRDF
@@ -120,6 +121,9 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	float Vis = V_SmithGGXCorrelated ( NdotV , NdotL , roughness );
 	float D = D_GGX ( NdotH , roughness );
 	float Fr = D * F * Vis / PI ;
+
+	float3 specColor = float3(1.f, 1.f, 1.f);
+	specColor = lerp(specColor, cAlbedo.rgb, metallic);
 
 	// Diffuse BRDF
 	float Fd = Fr_DisneyDiffuse ( NdotV , NdotL , LdotH , roughness * roughness  ) / PI;
@@ -139,7 +143,8 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	float3 albedoColor = cAlbedo * kD;
 	//float3 diffuseWithRef = ((Fd * cAlbedo * 1.2f *  NdotL) + (Fr * float3(1.f, 1.f, 1.f) * NdotL));
 	//return saturate((Fd * cAlbedo * NdotL) + (Fr * float3(1.f, 1.f, 1.f))) * NdotL;
-	return saturate((albedoColor + Fr * float3(1.f, 1.f, 1.f)) * Fd * NdotL);
+	//* float3(0.9f, 0.75f, 0.4f)
+	return ((albedoColor + Fr * specColor * 1.f) * Fd * 18.f * float3(0.9f, 0.75f, 0.4f) * NdotL);
 	//return cs.rgb * NdotL;
 	//return cs.rgb;
 }
@@ -165,7 +170,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     // calculate new normal from normal map if exists
     if(bHaveNormalTex)
     {
-        float3 normalMap = (TexAlbedo[normalIndexInHeap].Sample( ShadowSampler, input.texCoord ).xyz * 2.0f) - 1.0f;
+        float3 normalMap = (TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).xyz * 2.0f) - 1.0f;
     	float3x3 TBN = float3x3(input.tangent, input.bitangent, input.normal);
 		input.normal = normalize(mul(normalMap, TBN));
 		//input.normal = 	normalWorldSpace;	
@@ -183,7 +188,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
 
 	//if(depthValue < lightDepthValue)
     //{
-     //   return float4(finalColor, 1.f);
+    //    return float4(finalColor, 1.f);
     //}
 
 	float finalRoughness = materialRoughness;
@@ -199,10 +204,10 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     float3 L = lightDir;
     float3 V = input.viewDirection;
     float3 N = normalize(input.normal);
-    finalColor = saturate(finalColor + BRDF(L, V, N, texColor.rgb, 0.f, finalRoughness));
+    finalColor = (BRDF(L, V, N, texColor.rgb, 1.f, min(finalRoughness+0.001f, 1.f)));
 	//finalColor = finalColor + BRDF(L, V, N, texColor.rgb, 0.f, 0.1f);
     // BRDF ---------------------------------------------------------------------------------
 
     //return float4(TexAlbedo[normalIndexInHeap].Sample( BasicSampler, input.texCoord ).rgb, 1.f);
-    return float4(input.tangent, 1.f);
+    return float4(finalColor, 1.f);
 }

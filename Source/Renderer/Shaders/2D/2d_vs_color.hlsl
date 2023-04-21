@@ -12,7 +12,7 @@ struct VS_OUTPUT
     float4 pos: SV_POSITION;
     float3 normal : NORMAL;
     float2 texCoord : TEXCOORD0;
-    float3 tangent : TEXCOORD3;
+    float3 tangent : TANGENT;
     float3 bitangent : BITANGENT;
     float4 shadowPos : TEXCOORD1;
     float3 viewDirection : TEXCOORD2;
@@ -57,13 +57,14 @@ VS_OUTPUT vs_main(VS_INPUT input)
     output.pos = mul(output.pos, meshWorld);
 
     output.texCoord = input.texCoord;
-    output.normal = normalize(mul(input.normal, (float3x3)meshWorld));
+    output.normal = (mul(input.normal, (float3x3)meshWorld));
     output.tangent = normalize(mul(input.tangent, (float3x3)meshWorld));
     output.bitangent = mul(input.bitangent, (float3x3)meshWorld);
-    //output.tangent = normalize(output.tangent);
+    //output.tangent = input.tangent;
+    //output.bitangent = input.bitangent;
     //output.normal = normalize(output.normal);
-    output.tangent = normalize(output.tangent - dot(output.tangent, normalize(output.normal)) * normalize(output.normal));
-    output.bitangent = cross(output.normal, output.tangent);
+    //output.tangent = normalize(output.tangent - dot(output.tangent, normalize(output.normal)) * normalize(output.normal));
+    //output.bitangent = cross(output.normal, output.tangent);
 
 	output.viewDirection = worldCameraPosition.xyz - output.pos.xyz;
 	output.viewDirection = normalize(output.viewDirection);
