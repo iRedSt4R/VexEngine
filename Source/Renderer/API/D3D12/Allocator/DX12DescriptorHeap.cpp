@@ -340,6 +340,124 @@ DX12Resource* DX12ResoruceAllocator::LoadTexture2DFromBinary(ID3D12GraphicsComma
 	return returnResource;
 }
 
+DX12Resource* DX12ResoruceAllocator::AllocateEmptyTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV, bool initRTV, int depth)
+{
+	DX12Resource* returnResource = new DX12Resource();
+	ID3D12Resource* res;
+
+	returnResource->SetWidthHeight(width, height);
+
+	// resource:
+	D3D12_RESOURCE_DESC resDesc = {};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resDesc.Alignment = 0;
+	resDesc.Width = (UINT64)width;
+	resDesc.Height = (UINT)height;
+	resDesc.DepthOrArraySize = depth;
+	resDesc.MipLevels = 1;
+	resDesc.Format = textureFormat;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.SampleDesc.Quality = 0;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	if(initRTV) 
+		resDesc.Flags = resDesc.Flags | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	if(initUAV)
+		resDesc.Flags = resDesc.Flags | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = textureFormat;
+	clearValue.Color[0] = 0.0f;
+	clearValue.Color[1] = 0.0f;
+	clearValue.Color[2] = 0.0f;
+	clearValue.Color[3] = 1.0f;
+
+
+	auto heapType = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	m_device->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE, // todo: change flag to more optimized
+		&resDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		&clearValue,
+		IID_PPV_ARGS(&res));
+
+	returnResource->SetCurrentState(D3D12_RESOURCE_STATE_COMMON);
+	returnResource->AddResource(res);
+
+	// Create SRV
+	if (initSRV)
+	{
+		DX12DescriptorMemory descMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = textureFormat;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+		srvDesc.Texture2DArray = {};
+		srvDesc.Texture2DArray.ArraySize = depth;
+		srvDesc.Texture2DArray.FirstArraySlice = 0;
+		srvDesc.Texture2DArray.PlaneSlice = 0;
+		srvDesc.Texture2DArray.MipLevels = 1;
+
+		//srvDesc.Texture2D.PlaneSlice = 2;
+		m_device->CreateShaderResourceView(res, &srvDesc, descMemory.m_CpuDescriptorMemory);
+		m_srvNumber++;
+
+		returnResource->AddSRV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
+	}
+	if (initRTV)
+	{
+
+
+		DX12DescriptorMemory descMemory = m_RTVHeap->GetFreeDescriptorMemory();
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = textureFormat;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+		rtvDesc.Texture2DArray = {};
+		rtvDesc.Texture2DArray.ArraySize = 1;
+		rtvDesc.Texture2DArray.FirstArraySlice = 0;
+		rtvDesc.Texture2DArray.PlaneSlice = 0;
+
+		m_device->CreateRenderTargetView(res, &rtvDesc, descMemory.m_CpuDescriptorMemory);
+
+		returnResource->AddRTV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
+
+		for (uint32_t sliceID = 1; sliceID < depth; sliceID++)
+		{
+			DX12DescriptorMemory descMemory = m_RTVHeap->GetFreeDescriptorMemory();
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+			rtvDesc.Format = textureFormat;
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			rtvDesc.Texture2DArray = {};
+			rtvDesc.Texture2DArray.ArraySize = 1;
+			rtvDesc.Texture2DArray.FirstArraySlice = sliceID;
+			rtvDesc.Texture2DArray.PlaneSlice = 0;
+
+			m_device->CreateRenderTargetView(res, &rtvDesc, descMemory.m_CpuDescriptorMemory);
+		}
+	}
+
+	if (initUAV)
+	{
+		DX12DescriptorMemory descMemory = m_shaderVisibleDescHeap->GetFreeDescriptorMemory();
+
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+		uavDesc.Format = textureFormat;
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+
+		m_device->CreateUnorderedAccessView(res, nullptr, &uavDesc, descMemory.m_CpuDescriptorMemory);
+
+		returnResource->AddUAV(descMemory.m_GpuDescriptorMemory, descMemory.m_CpuDescriptorMemory, descMemory.m_descriptorIndex);
+		m_srvNumber++;
+	}
+
+	// return SRV
+	return returnResource;
+}
+
 DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV)
 {
 	DX12Resource* returnResource = new DX12Resource();
@@ -640,7 +758,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateEmptyCubemap(ID3D12GraphicsCommandL
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 		uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURECUBE;
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 
 	}
 

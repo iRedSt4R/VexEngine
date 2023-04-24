@@ -34,6 +34,8 @@ public:
 		BindConstantBuffer(cmdList, cbRootBindIndex);
 		cmdList->DrawIndexedInstanced(m_numSphereFaces * 3, 1, 0, 0, 0);
 	}
+
+	__forceinline ConstantBuffer<CBCubeMapData>* GetConstantBuffer() { return m_cubeMapCB; }
 	__forceinline DX12IndexedVertexBuffer* GetIndexedVertexBuffer() { return m_indxedVertexBuffer; }
 	__forceinline void BindIndexedVertexBuffer(ID3D12GraphicsCommandList* cmdList) { m_indxedVertexBuffer->Set(cmdList); }
 	__forceinline void BindConstantBuffer(ID3D12GraphicsCommandList* cmdList, UINT cbRootBindIndex) { m_cubeMapCB->SetAsInlineRootDescriptor(cmdList, cbRootBindIndex); }
@@ -49,6 +51,8 @@ private:
 	ConstantBuffer<CBCubeMapData>* m_cubeMapCB = nullptr;
 	TextureCube* m_cubemapSRV = nullptr;
 	
+	uint32_t skyboxHeight = 0;
+	uint32_t skyboxWidth = 0;
 
 	//DEBUG
 	XMMATRIX Rotationx;

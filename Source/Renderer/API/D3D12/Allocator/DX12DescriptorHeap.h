@@ -51,6 +51,9 @@ public:
 		m_depthDescHeap = new DX12DescriptorHeap(device, cmdList);
 		m_depthDescHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 256, false);
 
+		m_RTVHeap = new DX12DescriptorHeap(device, cmdList);
+		m_RTVHeap->Create(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 256, false);
+
 	}
 
 	static DX12ResoruceAllocator* Get()
@@ -77,6 +80,7 @@ public:
 	DX12Resource* AllocateTexture2DFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
 	DirectX::Blob* LoadTexture2DFromFilepath(const std::wstring& filePath, bool bMarkAsSRGB = true);
 	DX12Resource* LoadTexture2DFromBinary(ID3D12GraphicsCommandList* cmdList, void* blobMemory, size_t blobByteSize, bool bMarkAsSRGB = true);
+	DX12Resource* AllocateEmptyTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV, bool initRTV, int depth = 1);
 	DX12Resource* AllocateDepthTexture2D(uint32_t width, uint32_t height, DXGI_FORMAT textureFormat, bool initSRV, bool initUAV);
 	DX12Resource* AllocateTextureCubeFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);
 	DX12Resource* AllocateHDRIFromFilepath(ID3D12GraphicsCommandList* cmdList, const std::wstring& filePath, bool bMarkAsSRGB = true);

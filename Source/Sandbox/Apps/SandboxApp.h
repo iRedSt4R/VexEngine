@@ -25,10 +25,14 @@ private:
 	LightManager* m_lightNamanger = nullptr;
 	DirectionalLight* m_dirLight = nullptr;
 
+	// render passes that will be executed once per frame
 	std::vector<IRenderPass*> m_renderPasses = {};
+	// render passes that will be executed only once at the beginning
+	std::vector<IRenderPass*> m_initRenderPasses = {};
 
 	// RTs
 	DX12Resource* m_shadowDepthTexture = nullptr;
+	DX12Resource* m_irradianceMap = nullptr;
 
 	//window data:
 	uint32_t m_height = 0;

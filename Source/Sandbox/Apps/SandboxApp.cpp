@@ -43,6 +43,9 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	m_shadowDepthTexture = DX12ResoruceAllocator::Get()->AllocateDepthTexture2D(3840, 2160, DXGI_FORMAT_D32_FLOAT, true, false);
 	m_dirLight->SetShadowTextureIndex(m_shadowDepthTexture->GetSRVIndexInsideHeap());
 
+	// irradianceMap
+	m_irradianceMap = DX12ResoruceAllocator::Get()->AllocateEmptyTexture2D(512, 512, DXGI_FORMAT_R32G32B32A32_FLOAT, true, false, true, 6);
+
 	// passes defs:
 	RenderPassShadowMap* shadowPass = new RenderPassShadowMap();
 	shadowPass->AddMesh(m_mesh);
@@ -70,6 +73,12 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	twoDPass->AddShadowSRV(m_shadowDepthTexture);
 	m_renderPasses.push_back(twoDPass);
 
+	RenderPassGenIrradiance* irradiancePass = new RenderPassGenIrradiance();
+	irradiancePass->Create(m_renderer);
+	irradiancePass->AddIrradianceMap(m_irradianceMap);
+	irradiancePass->AddSkybox(cubemapDrawRenderPass->GetSkybox());
+	m_initRenderPasses.push_back(irradiancePass);
+
 	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.7f, 0.2f, XMFLOAT3(1.f, 1.f, 1.f));
 	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.0f, 0.0f, XMFLOAT3(0.f, 0.f, 0.f));
 	//testMat->Deserialize("testmat.vexmaterial");
@@ -83,6 +92,13 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 void SandboxApp::Begin()
 {
 	m_renderer->BeginFrame();
+
+	for (auto& renderPass : m_initRenderPasses)
+	{
+		renderPass->BeginPass(0);
+		renderPass->RunPass(0);
+		renderPass->EndPass(0);
+	}
 }
 
 void SandboxApp::Update()

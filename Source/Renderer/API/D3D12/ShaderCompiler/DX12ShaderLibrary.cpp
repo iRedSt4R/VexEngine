@@ -17,6 +17,9 @@ DX12ShaderLibrary::DX12ShaderLibrary()
 	CompileAndAddVertexShader(L"../../Source/Renderer/Shaders/Skybox/vs_skybox_draw.hlsl");
 	CompileAndAddPixelShader(L"../../Source/Renderer/Shaders/Skybox/ps_skybox_draw.hlsl");
 
+	CompileAndAddVertexShader(L"../../Source/Renderer/Shaders/PBR/vs_gen_irradiance.hlsl");
+	CompileAndAddPixelShader(L"../../Source/Renderer/Shaders/PBR/ps_gen_irradiance.hlsl");
+
 }
 
 DX12ShaderLibrary::~DX12ShaderLibrary()

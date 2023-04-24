@@ -60,6 +60,7 @@ struct CBCubeMapData
 {
 	XMFLOAT4X4 WorldViewProjection;
 	uint32_t textureCubeIndex = 0;
+	uint32_t sliceIndex = 0;
 };
 
 class ConstantBufferBase

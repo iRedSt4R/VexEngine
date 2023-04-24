@@ -36,14 +36,20 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompileVertexShader(std::filesystem::p
 		&result);
 
 	HRESULT hr;
-	if (result->GetStatus(&hr))
+	if (result->GetStatus(&hr) >=0)
 	{
 		IDxcBlobEncoding* errorsBlob;
 		result->GetErrorBuffer(&errorsBlob);
 		if (errorsBlob)
 		{
-			std::cout << (L"Compilation failed with errors:\n%hs\n",
-				(const char*)errorsBlob->GetBufferPointer()) << std::endl;
+			char* errorBuf = (char*)errorsBlob->GetBufferPointer();
+			
+			if (errorsBlob->GetBufferSize() > 0)
+			{
+				std::cout << (L"Compilation failed with errors:\n%hs\n", (const char*)errorsBlob->GetBufferPointer()) << std::endl;
+			}
+
+			//OutputDebugString((LPCSTR)errorsBlob->GetBufferPointer());
 		}
 	}
 

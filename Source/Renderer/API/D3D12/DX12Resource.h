@@ -25,6 +25,8 @@ public:
 	void AddRTV(D3D12_GPU_DESCRIPTOR_HANDLE rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_CPU, uint32_t indexInsideHeap);
 	void AddDSV(D3D12_GPU_DESCRIPTOR_HANDLE dsvHandle, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_CPU, uint32_t indexInsideHeap);
 
+	void SetWidthHeight(uint32_t width, uint32_t height) { m_width = width; m_height = height; }
+
 	// return true if barrier has to be executed, return false if resource was already in desired state (SINGLE THREADED)
 	//void AssureContextState(uint8_t contextID, D3D12_RESOURCE_STATES desiredState, ID3D12GraphicsCommandList* cmdList);
 	//bool ChangeContextState(uint8_t contextID, D3D12_RESOURCE_STATES newState, ID3D12GraphicsCommandList* cmdList);
@@ -47,6 +49,9 @@ public:
 	__forceinline uint32_t GetDSVIndexInsideHeap() { return m_DSVIndexInsideHeap; }
 
 	__forceinline ID3D12Resource* GetResource() { return m_resource; }
+
+	__forceinline uint32_t GetWidth() { return m_width; }
+	__forceinline uint32_t GetHeight() { return m_height; }
 private:
 
 	bool m_bHaveSRV = false;
@@ -72,6 +77,9 @@ private:
 
 	ID3D12Resource* m_resource = nullptr;
 	D3D12_RESOURCE_STATES m_currentResourceState = D3D12_RESOURCE_STATE_COMMON;
+
+	uint32_t m_width = 0;
+	uint32_t m_height = 0;
 };
 
 class DX12ResourceBase

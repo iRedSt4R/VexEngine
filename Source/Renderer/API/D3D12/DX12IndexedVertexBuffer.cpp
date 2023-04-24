@@ -15,7 +15,7 @@ DX12IndexedVertexBuffer::~DX12IndexedVertexBuffer()
 void DX12IndexedVertexBuffer::Create(ID3D12GraphicsCommandList* cmdList, int vertexBufferByteSize, int vertexBufferStride, int indexCount, void* vbData, void* ibData)
 {
 	m_vertexBufferByteSize = vertexBufferByteSize;
-	m_vertexBufferByteStride = vertexBufferByteSize;
+	m_vertexBufferByteStride = vertexBufferStride;
 	m_indexCount = indexCount;
 
 	// ------------------------------------------------------------------- VERTEX BUFFER ------------------------------------------------------------------- //

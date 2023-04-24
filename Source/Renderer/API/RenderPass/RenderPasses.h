@@ -117,6 +117,33 @@ private:
 
 	Skybox* m_skybox = nullptr;
 	FPSCamera* m_camera = nullptr;
-	
+};
 
+class RenderPassGenIrradiance : public RenderPassBase
+{
+public:
+	~RenderPassGenIrradiance();
+
+	void Create(DX12Renderer* renderer) override final;
+	void BeginPass(uint8_t contextID) override final;
+	void RunPass(uint8_t contextID) override final;
+	void EndPass(uint8_t contextID) override final;
+
+	void AddIrradianceMap(DX12Resource* irradianceMap) { m_irradianceMap = irradianceMap; }
+	void AddSkybox(Skybox* skybox) { m_skybox = skybox; }
+	__forceinline Skybox* GetSkybox() { return m_skybox; }
+
+private:
+	// Root signature and PSO unique to this pass
+	ID3D12RootSignature* m_RootSignature;
+	ID3D12PipelineState* m_PipelineStateObject;
+
+	// Shaders
+	D3D12_SHADER_BYTECODE m_vsShader;
+	D3D12_SHADER_BYTECODE m_psShader;
+
+	DX12Resource* m_irradianceMap = nullptr;
+	Skybox* m_skybox = nullptr;
+	DX12IndexedVertexBuffer* m_fullscreenTriangle = nullptr;
+	float* m_vertices = nullptr;
 };
