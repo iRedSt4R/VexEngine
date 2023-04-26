@@ -1,4 +1,4 @@
-Texture2D cubemapTexture[] : register(t0);
+TextureCube cubemapTexture[] : register(t0);
 SamplerState cubemapSampler : register(s0);
 
 struct VS_OUTPUT
@@ -23,6 +23,7 @@ float2 DirectionToEquirectangularUV(float3 direction)
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
 {
     float2 sampleIV = DirectionToEquirectangularUV(input.texCoord);
-    return cubemapTexture[cubemapIndex].Sample(cubemapSampler, sampleIV);
+    //return cubemapTexture[cubemapIndex].Sample(cubemapSampler, sampleIV);
+    return cubemapTexture[cubemapIndex].Sample(cubemapSampler, input.texCoord);
     //return float4(0.f, 0.f, 0.f, 1.f);
 }

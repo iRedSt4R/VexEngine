@@ -1,6 +1,8 @@
 Texture2D inputTexture[] : register(t0);
 SamplerState inputSampler : register(s0);
 
+#define PI 3.14159265359f
+
 static const float3 directions[6] = {
     float3(1, 0, 0), float3(-1, 0, 0),
     float3(0, 1, 0), float3(0, -1, 0),
@@ -25,6 +27,12 @@ cbuffer rootCB : register(b1)
     uint rootSliceIndex;
 };
 
+static const float3 DefNormals[6] = {
+    float3(1, 0, 0), float3(-1, 0, 0),
+    float3(0, 1, 0), float3(0, -1, 0),
+    float3(0, 0, 1), float3(0, 0, -1)
+};
+
 float3 computeDirection(float2 uv, uint faceIndex)
 {
     float u = uv.x * 2.0 - 1.0;
@@ -47,6 +55,51 @@ float3 computeDirection(float2 uv, uint faceIndex)
 
     return normalize(direction);
 }
+
+
+float2 directionToEquirectangular(float3 direction)
+{
+    float u = atan2(direction.z, direction.x) / (2.0 * 3.14159265359) + 0.5;
+    float v = asin(direction.y) / 3.14159265359 + 0.5;
+    return float2(u, v);
+}
+
+// float3 color = inputTexture[cubemapIndex].Sample(inputSampler, uv).rgb;
+float3 convoluteIrradiance(float3 normal, uint seed)
+{
+    float3 irradiance = float3(0, 0, 0);
+    const uint sampleCount = 16;
+    float weightSum = 0.0;
+
+    for (uint i = 0; i < sampleCount; ++i)
+    {
+        // Generate random numbers
+        float2 rand = float2(float(i % 7 + 1) / 7.0, float(i / 7 + 1) / 7.0) * float(seed % 7 + 1) / 7.0;
+        float phi = rand.x * 2.0 * 3.14159265359;
+        float cosTheta = 1.0 - rand.y;
+        float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+        // Calculate direction vector
+        float3 direction;
+        direction.x = sinTheta * cos(phi);
+        direction.y = cosTheta;
+        direction.z = sinTheta * sin(phi);
+
+        // Transform direction to tangent space
+        direction = normalize(direction.x * cross(normal, float3(0, 1, 0)) + direction.y * normal + direction.z * cross(normal, float3(0, 1, 0)));
+
+        float2 uv = directionToEquirectangular(direction);
+        float3 color = inputTexture[cubemapIndex].Sample(inputSampler, uv).rgb;
+
+        // Accumulate irradiance
+        irradiance += color * cosTheta;
+        weightSum += cosTheta;
+    }
+
+    irradiance /= weightSum;
+    return irradiance;
+}
+
 //COLOR[n]
 struct PS_OUT
 {
@@ -54,24 +107,16 @@ struct PS_OUT
     //uint outSlice : SV_RenderTargetArrayIndex;
 };
 
-float2 DirectionToEquirectangularUV(float3 direction)
-{
-    float u = atan2(direction.z, direction.x) / (2.0 * 3.14159265359) + 0.5;
-    float v = asin(direction.y) / 3.14159265359 + 0.5;
-    return float2(u, v);
-}
 
 PS_OUT ps_main(VS_OUTPUT input)
 {
-    PS_OUT outStruct;
-    //float2 uv = input.texcoord;
-    //float4 color = inputTexture[cubemapIndex].Sample(inputSampler, uv);
+    PS_OUT outData;
     float3 direction = computeDirection(input.texcoord, rootSliceIndex);
-    float2 uv = DirectionToEquirectangularUV(direction);
-    float4 color = inputTexture[cubemapIndex].Sample(inputSampler, uv);
-    
+    float3 normal = normalize(direction);
 
-    outStruct.outColor = color;
-    //outStruct.outSlice = sliceIndex;
-    return outStruct;
+    uint seed = rootSliceIndex * 7 + 1;
+    float3 irradiance = convoluteIrradiance(normal, seed);
+    
+    outData.outColor = float4(irradiance, 1.0);
+    return outData;
 }

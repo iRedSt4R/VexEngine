@@ -162,8 +162,8 @@ void SimpleMesh::LoadMesh(const aiScene* scene, aiNode* meshNode, int meshIndex,
 		aiColor3D color(0.f, 0.f, 0.f);
 		material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
 		m_meshCB->CPUData().color.x = 1.f;
-		m_meshCB->CPUData().color.y = 0.f;
-		m_meshCB->CPUData().color.z = 0.f;
+		m_meshCB->CPUData().color.y = 1.f;
+		m_meshCB->CPUData().color.z = 1.f;
 	}
 
 	// normal map

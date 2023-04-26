@@ -188,6 +188,17 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 
 	// create the PSO
 	HRESULT hr = m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineStateObject));
+
+	auto cmdList = renderer->GetContextCmdList(0);
+
+	m_diffuseIBL = new TextureCube(m_device);
+	m_diffuseIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testDiffuseHDR.dds", false);
+
+	m_specularIBL = new TextureCube(m_device);
+	m_specularIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testSpecularHDR.dds", false);
+
+	m_brdfIBL = new Texture2D(m_device);
+	m_brdfIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testBrdf.dds", false);
 }
 
 void RenderPassStaticOpaque::BeginPass(uint8_t contextID)
@@ -226,6 +237,12 @@ void RenderPassStaticOpaque::RunPass(uint8_t contextID)
 	m_cameraCB->CPUData().viewMatrix = m_camera->GetViewMatrix();
 	m_cameraCB->CPUData().projectionMatrix = m_camera->GetProjectionMatrix();
 	m_cameraCB->CPUData().worldCameraPosition = m_camera->GetCameraPosition();
+	m_cameraCB->CPUData().bHaveBRDFIBL = true;
+	m_cameraCB->CPUData().bHaveDiffuseIBL = true;
+	m_cameraCB->CPUData().bHaveSpecularIBL = true;
+	m_cameraCB->CPUData().diffuseIBLIndex = m_diffuseIBL->GetDX12Resource()->GetSRVIndexInsideHeap();
+	m_cameraCB->CPUData().specularIBLIndex = m_specularIBL->GetDX12Resource()->GetSRVIndexInsideHeap();
+	m_cameraCB->CPUData().BRDFIBLIndex = m_brdfIBL->GetDX12Resource()->GetSRVIndexInsideHeap();
 	m_cameraCB->SendConstantDataToGPU();
 
 	m_cameraCB->SetAsInlineRootDescriptor(cmdList, 0);

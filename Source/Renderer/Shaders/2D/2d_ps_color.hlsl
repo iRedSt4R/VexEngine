@@ -25,6 +25,12 @@ cbuffer CameraCB : register(b0)
 	float4x4 projectionMatrix;
     float4x4 invViewProjMatrix;
     float4 worldCameraPosition;
+	uint bHaveDiffuseIBL;
+	uint diffuseIBLIndex;
+	uint bHaveSpecularIBL;
+	uint specularIBLIndex;
+	uint bHaveBRDFIBL;
+	uint BRDFIBLIndex;
 };
 
 cbuffer DirectionalLightCB : register(b2)
@@ -60,7 +66,7 @@ float3 F_Schlick (in float3 f0 , in float f90 , in float u )
 
 float V_SmithGGXCorrelated ( float NdotL , float NdotV , float alphaG )
 {
-	float alphaG2 = alphaG * alphaG ;
+	float alphaG2 = alphaG * alphaG;
 	// Caution : the " NdotL *" and " NdotV *" are explicitely inversed , this is not a mistake .
 	float Lambda_GGXV = NdotL * sqrt (( - NdotV * alphaG2 + NdotV ) * NdotV + alphaG2 );
 	float Lambda_GGXL = NdotV * sqrt (( - NdotL * alphaG2 + NdotL ) * NdotL + alphaG2 );
@@ -96,10 +102,6 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 	float roughness = pRoughness;
 
 	float3 H = normalize (V + L);
-	float dot_n_l = dot(N, L);
-	float dot_l_h = dot(L, H);
-	float dot_n_h = dot(N, H);
-	float dot_n_v = dot(N, V);
 
 	float alpha = roughness * roughness;
 
@@ -127,27 +129,28 @@ float3 BRDF(float3 L, float3 V, float3 N, float3 cAlbedo, float pMetallic, float
 
 	// Diffuse BRDF
 	float Fd = Fr_DisneyDiffuse ( NdotV , NdotL , LdotH , roughness * roughness  ) / PI;
+	float3 ambient = cubemapTexture[diffuseIBLIndex].Sample(cubemapSampler, N).rgb;
+	//float ambient = 1.f;
 
 	// reflection
 	float3 reflectionVector = normalize(reflect(-V, N));
-	float smoothness = 1 - roughness;
-	float mipLevel = (1.0f - smoothness * smoothness) * 10.0f;
-	//float4 cs = cubemapTexture[cubemapIndex].SampleLevel(cubemapSampler, reflectionVector, mipLevel);
+	float smoothness = pow(1 - roughness, 1/2.f);
+	float mipLevel = (1.0f - smoothness) * 10.f;
+	float4 cs = cubemapTexture[specularIBLIndex].SampleLevel(cubemapSampler, reflectionVector, mipLevel);
+	float2 envBRDF  = TexAlbedo[BRDFIBLIndex].Sample(BasicSampler, float2(max(dot(N, V), 0.0), roughness)).rg;
+	float3 specular = cs.rgb * (F * envBRDF.x + envBRDF.y);
 
  	float3 kS = F;
     float3 kD = float3(1.0, 1.0, 1.0) - kS;
     kD *= 1.0 - metallic;	  
 
-	//abledo = saturate(lerp(abledo, cs.rgb, metallic));
-	//abledo = saturate(abledo.rgb + cs.rgb);
-	float3 albedoColor = cAlbedo * kD;
-	//float3 diffuseWithRef = ((Fd * cAlbedo * 1.2f *  NdotL) + (Fr * float3(1.f, 1.f, 1.f) * NdotL));
-	//return saturate((Fd * cAlbedo * NdotL) + (Fr * float3(1.f, 1.f, 1.f))) * NdotL;
-	//* float3(0.9f, 0.75f, 0.4f)
-	//float3(0.9f, 0.75f, 0.4f) 
-	return ((albedoColor + Fr * specColor * 1.f) * Fd * 2.f * float3(1.f, 1.f, 1.f) * NdotL);
-	//return cs.rgb * NdotL;
-	//return cs.rgb;
+	float3 albedoColor = cAlbedo * ambient * kD + specular;
+	//float brdfColor = ((albedoColor + Fr * specColor * 1.f) * Fd * float3(1.f, 1.f, 1.f) * 6.f);
+	//float ambientColor = 
+	//float3(1.f, 0.93f, 0.5f)
+	return ((albedoColor + Fr * specColor * 1.f) * Fd * float3(1.f, 1.f, 1.f) * 5.f * NdotL);
+	//return float3(envBRDF, 1.f);
+
 }
 
 float4 ps_main(VS_OUTPUT input) : SV_TARGET
@@ -162,7 +165,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
 	else
 		texColor = float4(materialColor, 1.f);
 
-    finalColor = texColor.xyz * float3(0.05f, 0.05f, 0.05f);
+    finalColor = texColor.xyz * float3(0.02f, 0.02f, 0.02f);
 
     if(texColor.a < 0.8f)
         discard;
@@ -205,7 +208,7 @@ float4 ps_main(VS_OUTPUT input) : SV_TARGET
     float3 L = lightDir;
     float3 V = input.viewDirection;
     float3 N = normalize(input.normal);
-    finalColor = (BRDF(L, V, N, texColor.rgb, finalMetallics, min(finalRoughness+0.001f, 1.f)));
+    finalColor = finalColor + (BRDF(L, V, N, texColor.rgb, finalMetallics, min(finalRoughness+0.001f, 1.f)));
 	//finalColor = finalColor + BRDF(L, V, N, texColor.rgb, 0.f, 0.1f);
     // BRDF ---------------------------------------------------------------------------------
 

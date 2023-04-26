@@ -26,6 +26,12 @@ struct CameraCB
 	XMFLOAT4X4 projectionMatrix;
 	XMFLOAT4X4 invViewProjMatrix;
 	XMFLOAT4 worldCameraPosition;
+	uint32_t bHaveDiffuseIBL;
+	uint32_t diffuseIBLIndex;
+	uint32_t bHaveSpecularIBL;
+	uint32_t specularIBLIndex;
+	uint32_t bHaveBRDFIBL;
+	uint32_t BRDFIBLIndex;
 };
 
 struct ShadowCameraCB

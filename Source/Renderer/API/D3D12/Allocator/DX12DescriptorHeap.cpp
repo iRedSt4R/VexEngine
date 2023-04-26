@@ -79,8 +79,13 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	DirectX::TexMetadata metadata;
 	DirectX::ScratchImage scratchImage;
 
+	HRESULT hr;
 	// Load texture using DirectXTex
-	HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
+	if(pp.extension() == ".dds")
+		hr = DirectX::LoadFromDDSFile(filePath.c_str(), DirectX::DDS_FLAGS_NONE, &metadata, scratchImage);
+	else
+		hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
+
 	if(bMarkAsSRGB)
 		metadata.format = DirectX::MakeSRGB(metadata.format); // just add _sRGB to the dx12 format, so it will automatically apply gamma correction (?)
 

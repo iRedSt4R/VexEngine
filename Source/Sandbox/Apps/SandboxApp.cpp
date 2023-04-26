@@ -24,6 +24,10 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	m_mesh = new Mesh(m_renderer->GetD3D12Device(), m_renderer->GetContextCmdList(0));
 	m_mesh->LoadMesh("spheres2/MetalRoughSpheres.gltf", "spheres2/");
 	//m_mesh->LoadMesh("sponza/Sponza.gltf", "sponza/");
+	// //DamagedHelmet.gltf
+	//m_mesh->LoadMesh("helmet2/DamagedHelmet.gltf", "helmet2/");
+	//m_mesh->LoadMesh("pistol/scene.gltf", "pistol/");
+	//m_mesh->LoadMesh("camera/scene.gltf", "camera/");
 	//m_mesh->LoadMesh("spheresRoughness.glb", "");
 	//m_mesh->LoadBinaryMesh("Assets/sponza.vexmesh");
 	//m_mesh->LoadBinaryMesh("Assets/sponaSerialized.vexmesh");
@@ -35,7 +39,7 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	// light manager (with directional light)
 	m_lightNamanger = LightManager::Get();
 	m_dirLight = new DirectionalLight();
-	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(0.95f, 0.95f, -0.2f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+	m_dirLight->Create(m_renderer->GetD3D12Device(), XMFLOAT3(-0.7f, 0.0f, -0.2f), XMFLOAT3(1.0f, 1.0f, 1.0f));
 	m_lightNamanger->AddDirectionalLight(m_dirLight);
 
 
@@ -73,11 +77,11 @@ void SandboxApp::Create(HINSTANCE hInstance, uint32_t height, uint32_t width)
 	twoDPass->AddShadowSRV(m_shadowDepthTexture);
 	m_renderPasses.push_back(twoDPass);
 
-	RenderPassGenIrradiance* irradiancePass = new RenderPassGenIrradiance();
-	irradiancePass->Create(m_renderer);
-	irradiancePass->AddIrradianceMap(m_irradianceMap);
-	irradiancePass->AddSkybox(cubemapDrawRenderPass->GetSkybox());
-	m_initRenderPasses.push_back(irradiancePass);
+	//RenderPassGenIrradiance* irradiancePass = new RenderPassGenIrradiance();
+	//irradiancePass->Create(m_renderer);
+	//irradiancePass->AddIrradianceMap(m_irradianceMap);
+	//irradiancePass->AddSkybox(cubemapDrawRenderPass->GetSkybox());
+	//m_initRenderPasses.push_back(irradiancePass);
 
 	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.7f, 0.2f, XMFLOAT3(1.f, 1.f, 1.f));
 	//Material* testMat = MaterialFactory::CreatePBRMaterialNoTextures(0.0f, 0.0f, XMFLOAT3(0.f, 0.f, 0.f));

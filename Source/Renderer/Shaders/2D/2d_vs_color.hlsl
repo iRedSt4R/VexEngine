@@ -24,6 +24,12 @@ cbuffer CameraCB : register(b0)
 	float4x4 projectionMatrix;
     float4x4 invViewProjMatrix;
     float4 worldCameraPosition;
+    uint bHaveDiffuseIBL;
+	uint diffuseIBLIndex;
+	uint bHaveSpecularIBL;
+	uint specularIBLIndex;
+	uint bHaveBRDFIBL;
+	uint BRDFIBLIndex;
 };
 
 // Constant Buffers

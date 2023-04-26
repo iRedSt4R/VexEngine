@@ -51,6 +51,9 @@ private:
 
 	// depth SRV for shadows
 	DX12Resource* m_shadowDepth = nullptr;
+	TextureCube* m_diffuseIBL = nullptr;
+	TextureCube* m_specularIBL = nullptr;
+	Texture2D* m_brdfIBL = nullptr;
 
 };
 
