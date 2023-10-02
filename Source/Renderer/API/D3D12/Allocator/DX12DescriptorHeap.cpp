@@ -94,11 +94,11 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 
 	// Save image as dds (and generate mipmaps)
 	DirectX::ScratchImage imgWithMipMaps;
-	auto hrr = DirectX::GenerateMipMaps(*scratchImage.GetImage(0, 0, 0), DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 8, imgWithMipMaps);
+	auto bMipMapGenSuccess = DirectX::GenerateMipMaps(*scratchImage.GetImage(0, 0, 0), DirectX::TEX_FILTER_FLAGS::TEX_FILTER_CUBIC, 8, imgWithMipMaps);
 
 
 	size_t mipLevels = 0;
-	if (hrr == S_OK)
+	if (bMipMapGenSuccess == S_OK)
 	{
 		metadata = imgWithMipMaps.GetMetadata();
 		if (bMarkAsSRGB)
@@ -137,13 +137,13 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 
 	// subresource info for copying
 	const DirectX::Image* pImages;
-	if (hrr == S_OK)
+	if (bMipMapGenSuccess == S_OK)
 		pImages = imgWithMipMaps.GetImages();
 	else
 		pImages = scratchImage.GetImages();
 
-	std::vector<D3D12_SUBRESOURCE_DATA> subresources(hrr == S_OK ? imgWithMipMaps.GetImageCount() : scratchImage.GetImageCount());
-	const Image* pImagess = hrr == S_OK ? imgWithMipMaps.GetImages() : scratchImage.GetImages();
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources(bMipMapGenSuccess == S_OK ? imgWithMipMaps.GetImageCount() : scratchImage.GetImageCount());
+	const Image* pImagess = bMipMapGenSuccess == S_OK ? imgWithMipMaps.GetImages() : scratchImage.GetImages();
 
 	for (int i = 0; i < subresources.size(); ++i) {
 
@@ -186,7 +186,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateTexture2DFromFilepath(ID3D12Graphic
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	if (hrr == S_OK)
+	if (bMipMapGenSuccess == S_OK)
 		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
 	else
 		srvDesc.Texture2D.MipLevels = metadata.mipLevels;
@@ -212,9 +212,6 @@ DirectX::Blob* DX12ResoruceAllocator::LoadTexture2DFromFilepath(const std::wstri
 
 	// Load texture using DirectXTex
 	HRESULT hr = DirectX::LoadFromWICFile(filePath.c_str(), DirectX::WIC_FLAGS_FORCE_RGB, &metadata, scratchImage);
-
-	//if (hr != S_OK)
-		//return nullptr;
 
 	// Save image as dds (and generate mipmaps)
 	DirectX::ScratchImage imgWithMipMaps;
@@ -356,7 +353,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateEmptyTexture2D(uint32_t width, uint
 	D3D12_RESOURCE_DESC resDesc = {};
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resDesc.Alignment = 0;
-	resDesc.Width = (UINT64)width;
+	resDesc.Width = (UINT)width;
 	resDesc.Height = (UINT)height;
 	resDesc.DepthOrArraySize = depth;
 	resDesc.MipLevels = 1;
@@ -413,8 +410,6 @@ DX12Resource* DX12ResoruceAllocator::AllocateEmptyTexture2D(uint32_t width, uint
 	}
 	if (initRTV)
 	{
-
-
 		DX12DescriptorMemory descMemory = m_RTVHeap->GetFreeDescriptorMemory();
 
 		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
@@ -472,7 +467,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateDepthTexture2D(uint32_t width, uint
 	D3D12_RESOURCE_DESC depthDesc = {};
 	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthDesc.Alignment = 0;
-	depthDesc.Width = (UINT64)width;
+	depthDesc.Width = (UINT)width;
 	depthDesc.Height = (UINT)height;
 	depthDesc.DepthOrArraySize = 1;
 	depthDesc.MipLevels = 1;
@@ -734,7 +729,7 @@ DX12Resource* DX12ResoruceAllocator::AllocateEmptyCubemap(ID3D12GraphicsCommandL
 	D3D12_RESOURCE_DESC depthDesc = {};
 	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthDesc.Alignment = 0;
-	depthDesc.Width = (UINT64)width;
+	depthDesc.Width = (UINT)width;
 	depthDesc.Height = (UINT)height;
 	depthDesc.DepthOrArraySize = 1;
 	depthDesc.MipLevels = 1;
@@ -764,7 +759,6 @@ DX12Resource* DX12ResoruceAllocator::AllocateEmptyCubemap(ID3D12GraphicsCommandL
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 		uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-
 	}
 
 	// SRV:

@@ -192,13 +192,13 @@ void RenderPassStaticOpaque::Create(DX12Renderer* renderer)
 	auto cmdList = renderer->GetContextCmdList(0);
 
 	m_diffuseIBL = new TextureCube(m_device);
-	m_diffuseIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testDiffuseHDR.dds", false);
+	m_diffuseIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/iuyDiffuseHDR.dds", false);
 
 	m_specularIBL = new TextureCube(m_device);
-	m_specularIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testSpecularHDR.dds", false);
+	m_specularIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/iuySpecularHDR.dds", false);
 
 	m_brdfIBL = new Texture2D(m_device);
-	m_brdfIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/testBrdf.dds", false);
+	m_brdfIBL->CreateFromFile(cmdList, L"Assets/skymaps/ibl/iuyBrdf.dds", false);
 }
 
 void RenderPassStaticOpaque::BeginPass(uint8_t contextID)

@@ -31,6 +31,9 @@ private:
 	ID3D12GraphicsCommandList* m_barrierCmdList = nullptr;
 	ID3D12CommandAllocator* m_barrierCmdAllocator = nullptr;
 
+	// global resources states that unknown barriers will use to transition when executing it's own command list
+	std::unordered_map<uint64_t, D3D12_RESOURCE_STATES> m_globalStates;
+
 	//D3D12_RESOURCE_STATES m_contextsState[8] = { D3D12_RESOURCE_STATE_COMMON };
 	//bool m_contextsState[8] = { false };
 };

@@ -7,7 +7,7 @@ void RenderPassCubeMapDraw::Create(DX12Renderer* renderer)
 	m_device = renderer->GetD3D12Device();
 
 	m_skybox = new Skybox(m_device);
-	m_skybox->CreateSkyboxSphere(renderer->GetContextCmdList(0), L"Assets/skymaps/ibl/testEnvHDR.dds", 10, 10);
+	m_skybox->CreateSkyboxSphere(renderer->GetContextCmdList(0), L"Assets/skymaps/ibl/iuyEnvHDR.dds", 10, 10);
 
 	D3D12_INPUT_ELEMENT_DESC inputLayout_PosCol[] =
 	{

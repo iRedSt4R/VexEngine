@@ -52,6 +52,9 @@ public:
 
 	__forceinline uint32_t GetWidth() { return m_width; }
 	__forceinline uint32_t GetHeight() { return m_height; }
+
+	__forceinline uint32_t SetResourceID(uint64_t resourceID) { m_uniqueResourceID = resourceID; }
+	__forceinline uint32_t GetResourceID() { return m_uniqueResourceID; }
 private:
 
 	bool m_bHaveSRV = false;
@@ -80,6 +83,9 @@ private:
 
 	uint32_t m_width = 0;
 	uint32_t m_height = 0;
+
+	// unique resource id for the lifetime of the game
+	uint64_t m_uniqueResourceID;
 };
 
 class DX12ResourceBase

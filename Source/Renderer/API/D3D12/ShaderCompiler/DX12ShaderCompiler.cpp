@@ -1,5 +1,9 @@
 #include "DX12ShaderCompiler.h"
 
+// For Agility SDK configuration
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 610; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\"; }
+
 DX12ShaderCompiler::DX12ShaderCompiler()
 {
 	DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_Utils));
@@ -29,7 +33,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompileVertexShader(std::filesystem::p
 		sourceBlob,
 		vsPath.c_str(),
 		L"vs_main", // pEntryPoint
-		L"vs_6_1", // pTargetProfile
+		L"vs_6_6", // pTargetProfile
 		arguments.data(), arguments.size(),
 		NULL, 0,
 		NULL,
@@ -83,7 +87,7 @@ D3D12_SHADER_BYTECODE DX12ShaderCompiler::CompilePixelShader(std::filesystem::pa
 		sourceBlob,
 		psPath.c_str(),
 		L"ps_main", // pEntryPoint
-		L"ps_6_1", // pTargetProfile
+		L"ps_6_6", // pTargetProfile
 		arguments.data(), arguments.size(),
 		NULL, 0,
 		NULL,

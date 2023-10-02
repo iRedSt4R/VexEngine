@@ -1,5 +1,7 @@
 #include "DX12Resource.h"
 
+static uint64_t globalResourceIDCounter = 0;
+
 DX12Resource::DX12Resource()
 {
 
@@ -18,6 +20,7 @@ DX12Resource::~DX12Resource()
 void DX12Resource::AddResource(ID3D12Resource* resource)
 {
 	m_resource = resource;
+	m_uniqueResourceID = globalResourceIDCounter++;
 }
 
 void DX12Resource::AddSRV(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_CPU, uint32_t indexInsideHeap)
